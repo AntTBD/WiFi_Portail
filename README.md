@@ -18,7 +18,7 @@ Thanks to differents class to configure Serial, FileSystem, a Files Manager, mul
 ![forks](https://img.shields.io/github/forks/AntTBD/WiFi_Portail)
 ![stars](https://img.shields.io/github/stars/AntTBD/WiFi_Portail)
 
-[comment]: <> (![license]&#40;https://img.shields.io/github/license/AntTBD/WiFi_Portail&#41;)
+![MIT License](https://img.shields.io/github/license/AntTBD/WiFi_Portail)
 
 [comment]: <> (![travis build]&#40;https://img.shields.io/travis/AntTBD/WiFi_Portail.svg?style=flat-square&#41;)
 
@@ -27,8 +27,6 @@ Thanks to differents class to configure Serial, FileSystem, a Files Manager, mul
 [comment]: <> (![version]&#40;https://img.shields.io/npm/v/WiFi_Portail.svg?style=flat-square&#41;)
 
 [comment]: <> (![downloads]&#40;https://img.shields.io/npm/dm/WiFi_Portail.svg?style=flat-square&#41;)
-
-[comment]: <> (![MIT License]&#40;https://img.shields.io/npm/l/WiFi_Portail.svg?style=flat-square&#41;)
 
 [comment]: <> (![GitHub release &#40;latest by date&#41;]&#40;https://img.shields.io/github/v/release/AntTBD/WiFi_Portail&#41;)
 
@@ -49,8 +47,17 @@ Thanks to differents class to configure Serial, FileSystem, a Files Manager, mul
 
 [comment]: <> ([![Bountysource]&#40;https://api.bountysource.com/badge/team?team_id=242217&#41;]&#40;https://salt.bountysource.com/checkout/amount?team=WiFI_Portail&#41;)
 
+
 [comment]: <> (## Version)
 
 [comment]: <> ([![Version]&#40;https://badge.fury.io/gh/tterb%2FHyde.svg&#41;]&#40;https://badge.fury.io/gh/tterb%2FHyde&#41;)
 
 [comment]: <> ([![GitHub Release]&#40;https://img.shields.io/github/release/tterb/PlayMusic.svg?style=flat&#41;]&#40;&#41;  )
+
+
+[comment]: <> (## Contributors)
+
+[comment]: <> (This project exists thanks to all the people who contribute.)
+
+[comment]: <> (<a href="https://github.com/AntTBD/WiFi_Portail/graphs/contributors"><img src="https://opencollective.com/WiFi_Portail/contributors.svg?width=890&button=false" /></a>)
+

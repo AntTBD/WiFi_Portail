@@ -9,9 +9,18 @@ TBD_WiFi_Portail_Wifi::TBD_WiFi_Portail_Wifi(TBD_WiFi_Portail_SerialDebug& seria
     this->wifiAll.setResetWifi(resetWifi);
     this->_connectTimeoutMs = 10000;
 
-    // this->_wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
-    // this->_wifiConnectHandler = WiFi.onStationModeConnected(onWifiConnect);
-    // this->_wifiOnStationModeGotIPHandler = WiFi.onStationModeGotIP(onWifiGotIP);
+     this->_wifiDisconnectHandler = WiFi.onStationModeDisconnected(
+             //onWifiDisconnect
+             std::bind(&TBD_WiFi_Portail_Wifi::onWifiDisconnect, this,std::placeholders::_1)
+             );
+     this->_wifiConnectHandler = WiFi.onStationModeConnected(
+             //onWifiConnect
+             std::bind(&TBD_WiFi_Portail_Wifi::onWifiConnect, this,std::placeholders::_1)
+             );
+     this->_wifiOnStationModeGotIPHandler = WiFi.onStationModeGotIP(
+             //onWifiGotIP
+             std::bind(&TBD_WiFi_Portail_Wifi::onWifiGotIP, this,std::placeholders::_1)
+             );
 }
 
 TBD_WiFi_Portail_Wifi::~TBD_WiFi_Portail_Wifi() {}
@@ -51,7 +60,7 @@ void TBD_WiFi_Portail_Wifi::begin() {
 void TBD_WiFi_Portail_Wifi::onWifiConnect(const WiFiEventStationModeConnected &event)
 {
     this->_wifiFlag = true;
-    this->_serialDebug->println(F("\n[ INFO ] WiFi STA Connected"));
+    this->_serialDebug->printf(F("\n[ INFO ] WiFi STA Connected to %s\n"), event.ssid.c_str());
 }
 
 void TBD_WiFi_Portail_Wifi::onWifiDisconnect(const WiFiEventStationModeDisconnected &event)
@@ -59,7 +68,8 @@ void TBD_WiFi_Portail_Wifi::onWifiDisconnect(const WiFiEventStationModeDisconnec
     //mqttReconnectTimer.detach();
     if (this->_wifiFlag)
     {
-        this->_serialDebug->println(F("[ INFO ] WiFi STA Disconnected"));
+        this->_serialDebug->printf(F("[ INFO ] WiFi STA Disconnected from SSID : %s\n"), event.ssid.c_str());
+        this->_serialDebug->printf(F("Reason: %d\n"), event.reason);
         this->_wifiFlag = false;
         this->_serialDebug->println(F("[ INFO ] WiFi try to reconnect"));
         this->begin();
@@ -70,6 +80,9 @@ void TBD_WiFi_Portail_Wifi::onWifiGotIP(const WiFiEventStationModeGotIP &event)
 {
     this->_wifiFlag = true;
     this->_serialDebug->println(F("\n[ INFO ] WiFi IP Connected"));
+
+    this->_serialDebug->printf(F("Got IP: %s\n"), event.ip.toString().c_str());
+    this->_serialDebug->printf(F("Connected: %s\n"), (WiFi.status() == WL_CONNECTED ? F("yes") : F("no")));
 
     //connectToMqtt();
     //writeEvent("INFO", "wifi", "Connected with IP", "onWifiGotIP");
