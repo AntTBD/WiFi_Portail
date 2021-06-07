@@ -16,7 +16,7 @@ TBD_WiFi_Portail_SerialDebug debug(Serial, 115200, true); // TBD_WiFi_Portail_Se
 TBD_WiFi_Portail_FileSystem files(debug, false);
 TBD_WiFi_Portail_FilesManager filesManager(debug, files);
 
-//STA STA1("ANTBDASUSROG_1717","Qq56&727");
+//STA STA1("ssid","********");
 //AP defaultAP("ESP_DEFAULT_AP_"+WiFi.macAddress(),"password");
 TBD_WiFi_Portail_Wifi wifi(debug, filesManager);
 
