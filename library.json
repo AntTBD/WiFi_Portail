@@ -1,0 +1,69 @@
+{
+  "name":"WiFi Portail",
+  "description":"This library can set/modify differents params of ESP8266 with a web portail : Wifi/FTP/MDNS/... It use differents Asynchronous Libraries.",
+  "keywords":"http,async,websocket,webserver,wifi,ftp,mdns,filesystem",
+  "authors":
+  {
+    "name": "Antoine TABARAUD",
+    "maintainer": true
+  },
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/AntTBD/WiFi_Portail.git"
+  },
+  "version": "0.0.0",
+  "license": "MIT License",
+  "frameworks": "arduino",
+  "platforms": ["espressif8266"],
+  "dependencies": [
+    {
+      "name": "ESPAsyncTCP",
+      "platforms": "espressif8266"
+    },
+    {
+      "name": "Hash",
+      "platforms": "espressif8266"
+    },
+    {
+      "name": "ArduinoJson",
+      "platforms": "espressif8266"
+    },
+    {
+      "name": "LittleFS",
+      "platforms": "espressif8266"
+    },
+    {
+      "name": "FS",
+      "platforms": "espressif8266"
+    },
+    {
+      "name": "SDFS",
+      "platforms": "espressif8266"
+    },
+    {
+      "name": "FTPServer",
+      "platforms": "espressif8266"
+    },
+    {
+      "name": "ESP8266mDNS",
+      "platforms": "espressif8266"
+    },
+    {
+      "name": "ESPAsyncWebServer",
+      "platforms": "espressif8266"
+    },
+    {
+      "name": "AFArray",
+      "platforms": "espressif8266"
+    },
+    {
+      "name": "ESP8266WiFi",
+      "platforms": "espressif8266"
+    },
+    {
+      "name": "ESP8266WiFiMulti",
+      "platforms": "espressif8266"
+    }
+  ]
+}
