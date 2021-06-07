@@ -34,3 +34,6 @@
 
 #JetBrean
 .idea
+
+# test lib
+examples/setting_page_test_lib/data
