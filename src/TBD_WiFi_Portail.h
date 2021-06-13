@@ -55,6 +55,7 @@ class TBD_WiFi_Portail_FTP;
 class TBD_WiFi_Portail_WebServer;
 class TBD_WiFi_Portail_WebSocket;
 class TBD_WiFi_Portail_WebEvents;
+class TBD_WiFi_Portail_NTP;
 
 
 class TBD_WiFi_Portail/* :

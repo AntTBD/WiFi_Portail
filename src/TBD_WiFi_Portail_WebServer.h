@@ -12,6 +12,7 @@
 #include "TBD_WiFi_Portail_FileSystem.h"
 #include "TBD_WiFi_Portail_WebEvents.h"
 #include "TBD_WiFi_Portail_WebSocket.h"
+#include "TBD_WiFi_Portail_NTP.h"
 
 // to get secure server (not work realy) https://github.com/me-no-dev/ESPAsyncWebServer/issues/392 or https://gitlab.users.ch.eu.org:10443/smarthome/eaws-ssl-updater
 
@@ -55,6 +56,7 @@ public:
 
     void addWebEvents(TBD_WiFi_Portail_WebEvents& webEvents);
     void addWebSocket(TBD_WiFi_Portail_WebSocket& webSocket);
+    void addNTP(TBD_WiFi_Portail_NTP& ntp);
     void begin();
 
 
@@ -68,6 +70,8 @@ public:
     void handleLoginConsole(AsyncWebServerRequest *request);
     void handleScanWifi(AsyncWebServerRequest *request);
     void handleScanResult(int networksFound);
+    void handleGetRealTime(AsyncWebServerRequest *request);
+    void handleGetUptime(AsyncWebServerRequest *request);
 
     // ------------------------------------------ Init Serveur Web ---------------------------------------------
     AsyncWebServer* server;
@@ -79,6 +83,7 @@ private:
     TBD_WiFi_Portail_Wifi* _wifi;
     TBD_WiFi_Portail_WebEvents* _webEvents;
     TBD_WiFi_Portail_WebSocket* _webSocket;
+    TBD_WiFi_Portail_NTP* _ntp;
 
     int _port;
     AFArray<PathMethodOnRequest> _allRoot;

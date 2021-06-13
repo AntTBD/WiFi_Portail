@@ -11,6 +11,7 @@ TBD_WiFi_Portail_WebServer::TBD_WiFi_Portail_WebServer(TBD_WiFi_Portail_SerialDe
 
     this->_webEvents = nullptr;
     this->_webSocket = nullptr;
+    this->_ntp = nullptr;
 }
 TBD_WiFi_Portail_WebServer::~TBD_WiFi_Portail_WebServer() {}
 
@@ -27,6 +28,11 @@ void TBD_WiFi_Portail_WebServer::addWebEvents(TBD_WiFi_Portail_WebEvents& webEve
 }
 void TBD_WiFi_Portail_WebServer::addWebSocket(TBD_WiFi_Portail_WebSocket& webSocket){
     this->_webSocket = &webSocket;
+}
+
+
+void TBD_WiFi_Portail_WebServer::addNTP(TBD_WiFi_Portail_NTP& ntp){
+    this->_ntp = &ntp;
 }
 
 void TBD_WiFi_Portail_WebServer::begin() {
@@ -51,6 +57,18 @@ void TBD_WiFi_Portail_WebServer::begin() {
             //std::bind(&TBD_WiFi_Portail_WebServer::handleLoginConsole, this,std::placeholders::_1)
             [&](AsyncWebServerRequest *request) {this->handleLoginConsole(request);}
             );
+    this->addRoot(
+            "/getRealTime",
+            HTTP_GET,
+            //std::bind(&TBD_WiFi_Portail_WebServer::handleGetRealTime, this,std::placeholders::_1)
+            [&](AsyncWebServerRequest *request) {this->handleGetRealTime(request);}
+    );
+    this->addRoot(
+            "/getUptime",
+            HTTP_GET,
+            //std::bind(&TBD_WiFi_Portail_WebServer::handleGetUptime, this,std::placeholders::_1)
+            [&](AsyncWebServerRequest *request) {this->handleGetUptime(request);}
+    );
 
     this->_serialDebug->print(F("root: (nbr="));
     this->_serialDebug->print(this->_allRoot.size()+3);
@@ -292,4 +310,23 @@ void TBD_WiFi_Portail_WebServer::handleScanResult(int networksFound) {
     if(this->_webSocket != nullptr) this->_webSocket->sendJsonByWebsocket(&doc);
 
     WiFi.scanDelete();
+}
+
+void TBD_WiFi_Portail_WebServer::handleGetRealTime(AsyncWebServerRequest *request){
+    if(this->_ntp != nullptr) {
+        this->_ntp->getTimeDateString();
+        request->send(200, F("text/plain"), F("Response will be sended by WebSocket"));
+    }else{
+        request->send(200, F("text/plain"), F("NTP not added to webServer !"));
+    }
+
+}
+void TBD_WiFi_Portail_WebServer::handleGetUptime(AsyncWebServerRequest *request){
+    if(this->_ntp != nullptr) {
+        request->send(200, F("text/plain"), F("Response will be sended by WebSocket"));
+        this->_ntp->sendUptimeByWebSocket();
+    }else{
+        request->send(200, F("text/plain"), F("NTP not added to webServer !"));
+    }
+
 }

@@ -4,15 +4,15 @@
 // Definitions of AP, STA, WifiAll classes
 
 #include <Arduino.h>
-#include <string>
+/*#include <string>
 #include <ostream>
 #include <stdlib.h>
-#include <utility>
+#include <utility>*/
 
 #include <AFArray.h>
 #include <ESP8266WiFi.h>// to include ESP8266WiFiType.h library
 
-using namespace std;
+//using namespace std;
 
 class AP
 {
