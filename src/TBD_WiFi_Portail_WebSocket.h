@@ -40,6 +40,8 @@ public:
     void envoieHardwareInfosToClient(uint32_t client_id);
     void envoieValuesToClient(uint32_t client_id);
 
+    void sendStringResultOf(String resultOf, String result);
+
 
     AsyncWebSocket* webSocket;
 private:

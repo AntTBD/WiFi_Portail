@@ -12,6 +12,7 @@ TBD_WiFi_Portail_WebServer::TBD_WiFi_Portail_WebServer(TBD_WiFi_Portail_SerialDe
     this->_webEvents = nullptr;
     this->_webSocket = nullptr;
     this->_ntp = nullptr;
+    this->_espInfos = nullptr;
 }
 TBD_WiFi_Portail_WebServer::~TBD_WiFi_Portail_WebServer() {}
 
@@ -33,6 +34,10 @@ void TBD_WiFi_Portail_WebServer::addWebSocket(TBD_WiFi_Portail_WebSocket& webSoc
 
 void TBD_WiFi_Portail_WebServer::addNTP(TBD_WiFi_Portail_NTP& ntp){
     this->_ntp = &ntp;
+}
+
+void TBD_WiFi_Portail_WebServer::addESPInfos(TBD_WiFi_Portail_ESP& espInfos){
+    this->_espInfos = &espInfos;
 }
 
 void TBD_WiFi_Portail_WebServer::begin() {
@@ -68,6 +73,12 @@ void TBD_WiFi_Portail_WebServer::begin() {
             HTTP_GET,
             //std::bind(&TBD_WiFi_Portail_WebServer::handleGetUptime, this,std::placeholders::_1)
             [&](AsyncWebServerRequest *request) {this->handleGetUptime(request);}
+    );
+    this->addRoot(
+            "/getESPInfos",
+            HTTP_GET,
+            //std::bind(&TBD_WiFi_Portail_WebServer::handleGetESPInfos, this,std::placeholders::_1)
+            [&](AsyncWebServerRequest *request) {this->handleGetESPInfos(request);}
     );
 
     this->_serialDebug->print(F("root: (nbr="));
@@ -327,6 +338,16 @@ void TBD_WiFi_Portail_WebServer::handleGetUptime(AsyncWebServerRequest *request)
         this->_ntp->sendUptimeByWebSocket();
     }else{
         request->send(200, F("text/plain"), F("NTP not added to webServer !"));
+    }
+
+}
+
+void TBD_WiFi_Portail_WebServer::handleGetESPInfos(AsyncWebServerRequest *request){
+    if(this->_espInfos != nullptr) {
+        request->send(200, F("text/plain"), F("Response will be sended by WebSocket"));
+        this->_espInfos->sendHardwareInfosByWebSocket();
+    }else{
+        request->send(200, F("text/plain"), F("ESP Infos not added to webServer !"));
     }
 
 }

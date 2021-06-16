@@ -9,6 +9,7 @@
 #include <TBD_WiFi_Portail_WebSocket.h>
 #include <TBD_WiFi_Portail_WebEvents.h>
 #include <TBD_WiFi_Portail_NTP.h>
+#include <TBD_WiFi_Portail_ESP.h>
 
 // https://github.com/esprfid/esp-rfid
 
@@ -28,6 +29,7 @@ TBD_WiFi_Portail_WebSocket webSocket(debug, webServer, "/ws");
 TBD_WiFi_Portail_WebEvents webEvents(debug, webServer, "/events", "/eventsAdmin");
 
 TBD_WiFi_Portail_NTP ntp(debug, "pool.ntp.org");
+TBD_WiFi_Portail_ESP ESPInfos;
 
 void handleStop(AsyncWebServerRequest *request) {
   request->send(200, F("text/plain"), F("Stop ok"));
@@ -57,6 +59,7 @@ void setup()
   webServer.addWebSocket(webSocket);
   webServer.addWebEvents(webEvents);
   webServer.addNTP(ntp);
+  webServer.addESPInfos(ESPInfos);
   webServer.begin();
 
   webSocket.addWebEvents(webEvents);
@@ -69,6 +72,10 @@ void setup()
   debug.println(ntp.getTimeDateString());
   debug.println(ntp.getUptimeString());
 
+
+  ESPInfos.addNTP(ntp);
+  ESPInfos.addFileSystem(files);
+  ESPInfos.addWebSocket(webSocket);
 
   
   debug.printf(F("Free heap: %u\n"), ESP.getFreeHeap());

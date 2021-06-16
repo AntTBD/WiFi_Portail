@@ -146,7 +146,7 @@ void TBD_WiFi_Portail_FileSystem::infos_FileSytem()
     if (nbrOfDir == 0) {
         this->_serialDebug->println(F("No files in FileSystem !!!"));
         this->_serialDebug->println(F("Waiting..."));
-        while (true) {
+        while(true) {
             this->_serialDebug->print(F("."));
             delay(1000);
         }

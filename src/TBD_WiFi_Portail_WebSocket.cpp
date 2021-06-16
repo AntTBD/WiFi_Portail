@@ -226,3 +226,12 @@ void TBD_WiFi_Portail_WebSocket::envoieValuesToClient(uint32_t client_id)
 {
     // ws_send_to_client(client_id, handleInfos().c_str()); // send data to client
 }
+
+// ---------------------------------------------------------------
+void TBD_WiFi_Portail_WebSocket::sendStringResultOf(String resultOf, String result){
+    DynamicJsonDocument doc(JSON_OBJECT_SIZE(2) + strlen(result.c_str()));
+    doc["resultof"] = resultOf;
+    doc["result"] = result;
+
+    sendJsonByWebsocket(&doc);
+}
