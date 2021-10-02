@@ -5,25 +5,33 @@
 #include "TBD_WiFi_Portail_FileSystem.h"
 
 // ---------------------------------- Start file system ------------------------------------------
-TBD_WiFi_Portail_FileSystem::TBD_WiFi_Portail_FileSystem(TBD_WiFi_Portail_SerialDebug& serialDebug, bool resetFileSystemAtStartup) : _resetFileSystemAtStartup(resetFileSystemAtStartup), _serialDebug(&serialDebug) {
+TBD_WiFi_Portail_FileSystem::TBD_WiFi_Portail_FileSystem(TBD_WiFi_Portail_SerialDebug &serialDebug, bool resetFileSystemAtStartup) : _resetFileSystemAtStartup(resetFileSystemAtStartup),
+                                                                                                                                     _serialDebug(&serialDebug)
+{
 
-    #if defined USE_SPIFFS
-        this->fileSystem = &SPIFFS;
-        this->_fileSystemConfig = SPIFFSConfig();
-    #elif defined USE_LITTLEFS
-        this->fileSystem = &LittleFS;
-        this->_fileSystemConfig = LittleFSConfig();
-    #elif defined USE_SDFS
-        this->fileSystem = &SDFS;
-        this->_fileSystemConfig = SDFSConfig();
-    #endif
+#if defined USE_SPIFFS
+    this->fileSystem = &SPIFFS;
+    this->_fileSystemConfig = SPIFFSConfig();
+#elif defined USE_LITTLEFS
+    this->fileSystem = &LittleFS;
+    this->_fileSystemConfig = LittleFSConfig();
+#elif defined USE_SDFS
+    this->fileSystem = &SDFS;
+    this->_fileSystemConfig = SDFSConfig();
+#endif
 }
 
-TBD_WiFi_Portail_FileSystem::~TBD_WiFi_Portail_FileSystem() {}
+TBD_WiFi_Portail_FileSystem::~TBD_WiFi_Portail_FileSystem()
+{
+    delete this->_serialDebug;
 
-bool TBD_WiFi_Portail_FileSystem::begin() {
+    delete this->fileSystem;
+    //delete this->_fileSystemConfig;
+}
+
+bool TBD_WiFi_Portail_FileSystem::begin()
+{
     this->_serialDebug->println(F("== Setup File Sytem =="));
-
 
     this->fileSystem->setConfig(this->_fileSystemConfig);
     bool fsOK = this->fileSystem->begin();
@@ -31,21 +39,23 @@ bool TBD_WiFi_Portail_FileSystem::begin() {
 
     if (!fsOK)
     {
-        while(true){
+        while (true)
+        {
             this->_serialDebug->print(F("."));
             delay(1000);
         }
     }
 
-    bool formatOK;
-    if(this->_resetFileSystemAtStartup){
+    bool formatOK = false;
+    if (this->_resetFileSystemAtStartup)
+    {
         this->_serialDebug->println(F("\nFormatting FILE SYSTEM !\nThose files will be deleted:"));
         uint16_t nbrOfDir = this->getListOfAllFilesInMemory();
 
         this->_serialDebug->println(F("\nStarting formatting FILE SYSTEM"));
         uint32_t startTime = millis();
 
-        formatOK = this->fileSystem->format();// formatting of FILE SYSTEM memory
+        formatOK = this->fileSystem->format(); // formatting of FILE SYSTEM memory
         if (formatOK)
         {
             this->_serialDebug->print(F("Formatting completed, it took "));
@@ -65,8 +75,6 @@ bool TBD_WiFi_Portail_FileSystem::begin() {
     return (fsOK && formatOK);
 }
 
-
-
 // --------------------------------------- List of files in memory -----------------------------------
 uint16_t TBD_WiFi_Portail_FileSystem::getListOfAllFilesInMemory()
 {
@@ -80,7 +88,7 @@ uint16_t TBD_WiFi_Portail_FileSystem::getListOfAllFilesInMemory()
 
 // --------------------------------------- liste des fichiers et autres dossier dans un dossier -----------------------------------
 // It is possible to create subfolders without exceeding the limit of 31 useful characters for the file path including the file name and its extension.
-uint16_t TBD_WiFi_Portail_FileSystem::listDir(String indent, String path)
+uint16_t TBD_WiFi_Portail_FileSystem::listDir(const String &indent, const String &path)
 {
     uint16_t dirCount = 0;
     Dir dir = this->fileSystem->openDir(path);
@@ -94,10 +102,12 @@ uint16_t TBD_WiFi_Portail_FileSystem::listDir(String indent, String path)
             this->_serialDebug->print(dir.fileName().c_str());
             this->_serialDebug->println(F(" [Dir]"));
             dirCount += this->listDir(indent + F("   "), path + dir.fileName() + F("/"));
-        } else {
+        }
+        else
+        {
             this->_serialDebug->print(indent.c_str());
             this->_serialDebug->print(F("  "));
-            this->_serialDebug->printf(F("%-16s"),dir.fileName().c_str());
+            this->_serialDebug->printf(F("%-16s"), dir.fileName().c_str());
             this->_serialDebug->print(F(" ("));
             //this->_serialDebug->printf("%ld",(uint32_t)dir.fileSize());
             //this->_serialDebug->println(F(" Bytes)"));
@@ -117,15 +127,15 @@ void TBD_WiFi_Portail_FileSystem::infos_FileSytem()
     this->_serialDebug->println(F("==========================================="));
 
     FSInfo fsInfo;
-    this->fileSystem->info(fsInfo);                 // info fs
+    this->fileSystem->info(fsInfo);             // info fs
     float total = (fsInfo.totalBytes / 1024.0); // fsInfo.totalBytes
     this->_serialDebug->print(F("info totalbytes :    "));
-//  this->_serialDebug->print(total);
-//  this->_serialDebug->println(F(" ko"));
+    //  this->_serialDebug->print(total);
+    //  this->_serialDebug->println(F(" ko"));
     this->_serialDebug->println(this->formatBytes(total));
     this->_serialDebug->print(F("info usedbytes :     "));
-//  this->_serialDebug->print((float)(fsInfo.usedBytes/1024.0));
-//  this->_serialDebug->println(F(" ko"));
+    //  this->_serialDebug->print((float)(fsInfo.usedBytes/1024.0));
+    //  this->_serialDebug->println(F(" ko"));
     this->_serialDebug->println(this->formatBytes(fsInfo.usedBytes));
     this->_serialDebug->print(F("info blocksize :     "));
     this->_serialDebug->println(fsInfo.blockSize);
@@ -143,10 +153,12 @@ void TBD_WiFi_Portail_FileSystem::infos_FileSytem()
 
     this->_serialDebug->println(F("\n===========================================\n"));
 
-    if (nbrOfDir == 0) {
+    if (nbrOfDir == 0)
+    {
         this->_serialDebug->println(F("No files in FileSystem !!!"));
         this->_serialDebug->println(F("Waiting..."));
-        while(true) {
+        for (;;)
+        {
             this->_serialDebug->print(F("."));
             delay(1000);
         }
@@ -160,10 +172,8 @@ void TBD_WiFi_Portail_FileSystem::filesytem_end()
     this->fileSystem->end();
 }
 
-
-
 // ----------------------- format bytes ----------------------------------------------------
-String TBD_WiFi_Portail_FileSystem::formatBytes(size_t bytes)
+String TBD_WiFi_Portail_FileSystem::formatBytes(size_t bytes) const
 {
     if (bytes < 1024)
     {
