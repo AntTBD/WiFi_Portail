@@ -5,7 +5,6 @@
 #ifndef TBD_WIFI_PORTAIL_SERIALDEBUG_H
 #define TBD_WIFI_PORTAIL_SERIALDEBUG_H
 
-
 #include <Arduino.h>
 #include "TBD_WiFi_Portail.h"
 
@@ -15,18 +14,21 @@
 //Creating a printf() wrapper https://playground.arduino.cc/Main/Printf/
 #include <stdarg.h>
 
-class TBD_WiFi_Portail_SerialDebug {
+class TBD_WiFi_Portail_SerialDebug
+{
 public:
     //TBD_WiFi_Portail_SerialDebug();
     //TBD_WiFi_Portail_SerialDebug(HardwareSerial* port = &Serial);
     //TBD_WiFi_Portail_SerialDebug(HardwareSerial& port = Serial);
 
     //TBD_WiFi_Portail_SerialDebug(HardwareSerial& port = Serial);
-    TBD_WiFi_Portail_SerialDebug(HardwareSerial& port = Serial, long baudRate = 115200, bool wifiDiagnostic = false);
+    TBD_WiFi_Portail_SerialDebug(HardwareSerial &port = Serial, long baudRate = 115200, bool wifiDiagnostic = false);
 
     ~TBD_WiFi_Portail_SerialDebug();
 
     bool begin();
+    void setDebug(bool debug);
+    bool getDebug() const;
 
     size_t print(const __FlashStringHelper *);
     size_t print(const String &);
@@ -54,19 +56,20 @@ public:
     size_t println(void);
 
     //Creating a printf() wrapper https://playground.arduino.cc/Main/Printf/
-    size_t printf(const char * fmt, ...);
-    size_t printf(const __FlashStringHelper *fmt, ... );
+    size_t printf(const char *fmt, ...);
+    size_t printf(const __FlashStringHelper *fmt, ...);
 
-    HardwareSerial* getSerial();
+    HardwareSerial *getSerial();
 
 protected:
-    HardwareSerial* _stream;
+    HardwareSerial *_stream;
 
 private:
     long _baudRate;
     bool _wifiDiagnostic;
-};
 
+    bool _debug;
+};
 
 //extern TBD_WiFi_Portail_SerialDebug _TBD_WiFi_Portail_SerialDebug;
 
