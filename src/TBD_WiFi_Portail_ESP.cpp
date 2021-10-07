@@ -32,7 +32,7 @@
 };*/
 
 /// Constructor
-TBD_WiFi_Portail_ESP::TBD_WiFi_Portail_ESP() {
+TBD_WiFi_Portail_ESP::TBD_WiFi_Portail_ESP():Service() {
     /*this->_infosName = {
             "esphead",
             "uptime",

@@ -7,12 +7,13 @@
 
 #include <Arduino.h>
 #include "TBD_WiFi_Portail.h"
+#include "Service.h"
 #include "TBD_WiFi_Portail_SerialDebug.h"
 #include "TBD_WiFi_Portail_WebServer.h"
 #include "TBD_WiFi_Portail_WebEvents.h"
 //#include "TBD_WiFi_Portail_Wifi.h"
-#include "TBD_WiFi_Portail_NTP.h"
-#include "TBD_WiFi_Portail_ESP.h"
+//#include "TBD_WiFi_Portail_NTP.h"
+//#include "TBD_WiFi_Portail_ESP.h"
 
 #include <ESPAsyncTCP.h>       // https://github.com/me-no-dev/ESPAsyncTCP
 #include <ESPAsyncWebServer.h> // https://github.com/me-no-dev/ESPAsyncWebServer
@@ -50,8 +51,8 @@ public:
     ~TBD_WiFi_Portail_WebSocket();
 
     void addWebEvents(TBD_WiFi_Portail_WebEvents &webEvents);
-    void addNTP(TBD_WiFi_Portail_NTP &ntp);
-    void addESPInfos(TBD_WiFi_Portail_ESP &espInfos);
+    void addNTP(Service &ntp);
+    void addESPInfos(Service &espInfos);
 
     void addCommand(const char *commandNameIn, const char *commandNameOut, HandlerFunctionWebSocket onCommand);
 
@@ -87,8 +88,8 @@ private:
     TBD_WiFi_Portail_WebServer *_webServer;
     TBD_WiFi_Portail_WebEvents *_webEvents;
     //TBD_WiFi_Portail_Wifi* _wifi;
-    TBD_WiFi_Portail_NTP *_ntp;
-    TBD_WiFi_Portail_ESP *_espInfos;
+    Service *_ntp;
+    Service *_espInfos;
 
     String _root;
     AFArray<PathMethodOnRequestWebSocket> *_allCommand;

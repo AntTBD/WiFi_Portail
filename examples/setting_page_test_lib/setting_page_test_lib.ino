@@ -4,8 +4,6 @@
 // VTables : Flash
 // CPU Frequency : 160 MHz
 
-#include <avr8-stub.h>
-
 //#include <TBD_WiFi_Portail.h>
 
 
@@ -54,7 +52,6 @@ void handleStop(AsyncWebServerRequest *request) {
 
 void setup()
 {
-	debug_init();
   pinMode(D4, OUTPUT);
   analogWrite(D4, 1020);//ON
 
@@ -141,7 +138,6 @@ void setup()
 
 void loop()
 {
-	breakpoint();
 #ifdef USE_MDNS
   mdns.loop();
 #endif // USE_MDNS

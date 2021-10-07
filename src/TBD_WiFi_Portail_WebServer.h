@@ -8,13 +8,14 @@
 
 #include <Arduino.h>
 #include "TBD_WiFi_Portail.h"
+#include "Service.h"
 #include "TBD_WiFi_Portail_SerialDebug.h"
 #include "TBD_WiFi_Portail_FileSystem.h"
 #include "TBD_WiFi_Portail_WebEvents.h"
 #include "TBD_WiFi_Portail_WebSocket.h"
 #include "TBD_WiFi_Portail_Wifi.h"
-#include "TBD_WiFi_Portail_NTP.h"
-#include "TBD_WiFi_Portail_ESP.h"
+//#include "TBD_WiFi_Portail_NTP.h"
+//#include "TBD_WiFi_Portail_ESP.h"
 
 // to get secure server (not work realy) https://github.com/me-no-dev/ESPAsyncWebServer/issues/392 or https://gitlab.users.ch.eu.org:10443/smarthome/eaws-ssl-updater
 
@@ -58,8 +59,8 @@ public:
 
     void addWebEvents(TBD_WiFi_Portail_WebEvents &webEvents);
     void addWebSocket(TBD_WiFi_Portail_WebSocket &webSocket);
-    void addNTP(TBD_WiFi_Portail_NTP &ntp);
-    void addESPInfos(TBD_WiFi_Portail_ESP &espInfos);
+    void addNTP(Service &ntp);
+    void addESPInfos(Service &espInfos);
 
     void begin();
 
@@ -88,8 +89,8 @@ private:
     TBD_WiFi_Portail_FileSystem *_fileSystem;
     TBD_WiFi_Portail_WebEvents *_webEvents;
     TBD_WiFi_Portail_WebSocket *_webSocket;
-    TBD_WiFi_Portail_NTP *_ntp;
-    TBD_WiFi_Portail_ESP *_espInfos;
+    Service *_ntp;
+    Service *_espInfos;
 
     int _port;
     AFArray<PathMethodOnRequest> *_allRoot;

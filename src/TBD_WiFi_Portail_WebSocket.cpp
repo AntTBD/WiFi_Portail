@@ -36,12 +36,12 @@ void TBD_WiFi_Portail_WebSocket::addWebEvents(TBD_WiFi_Portail_WebEvents &webEve
     this->_webEvents = &webEvents;
 }
 
-void TBD_WiFi_Portail_WebSocket::addNTP(TBD_WiFi_Portail_NTP &ntp)
+void TBD_WiFi_Portail_WebSocket::addNTP(Service &ntp)
 {
     this->_ntp = &ntp;
 }
 
-void TBD_WiFi_Portail_WebSocket::addESPInfos(TBD_WiFi_Portail_ESP &espInfos)
+void TBD_WiFi_Portail_WebSocket::addESPInfos(Service &espInfos)
 {
     this->_espInfos = &espInfos;
 }
@@ -457,7 +457,7 @@ void TBD_WiFi_Portail_WebSocket::handleCommandStatus(int numClient, String value
     if (this->_espInfos != nullptr)
     {
         //this->_espInfos->sendHardwareInfosByWebSocket();
-        this->ws_send_to_client(numClient, this->_espInfos->getHardwareInfosString2());
+        this->ws_send_to_client(numClient, this->_espInfos->toString());
     }
     else
     {
@@ -488,7 +488,7 @@ void TBD_WiFi_Portail_WebSocket::handleCommandRealTime(int numClient, String val
 #ifdef USE_NTP
     if (this->_ntp != nullptr)
     {
-        this->sendJsonResultOf("getRealTime", this->_ntp->getRealTimeJsonObj());
+        this->sendJsonResultOf("getRealTime", this->_ntp->toObj());
         ///            this->ws_send_to_all_client(this->_ntp->getRealTimeString());
         //this->ws_send_to_client(numClient, this->_ntp->getRealTimeString());
 

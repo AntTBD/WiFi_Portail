@@ -7,13 +7,14 @@
 
 #include <Arduino.h>
 #include "TBD_WiFi_Portail.h"
+#include "Service.h"
 #include "TBD_WiFi_Portail_NTP.h"
 #include "TBD_WiFi_Portail_FileSystem.h"
 #include <ESP8266WiFi.h>
 //#include "TBD_WiFi_Portail_WebSocket.h"
 
 #include <AFArray.h>
-#include <ArduinoJson.h>
+//#include <ArduinoJson.h>
 
 typedef struct Progress
 {
@@ -107,7 +108,7 @@ struct allStatus{
 };*/
 
 /// Class for all information of ESP
-class TBD_WiFi_Portail_ESP
+class TBD_WiFi_Portail_ESP : public Service
 {
 public:
     TBD_WiFi_Portail_ESP();
@@ -121,6 +122,11 @@ public:
     //String getHardwareInfosString();
     String getHardwareInfosString2();
     //void sendHardwareInfosByWebSocket();
+
+
+    DynamicJsonDocument toJson() { return this->getHardwareInfosJson2(); };
+
+    String toString() { return this->getHardwareInfosString2(); };
 
 private:
     AFArray<String> *_infosName;

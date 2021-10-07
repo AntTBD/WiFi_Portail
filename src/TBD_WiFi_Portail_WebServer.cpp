@@ -53,12 +53,12 @@ void TBD_WiFi_Portail_WebServer::addWebSocket(TBD_WiFi_Portail_WebSocket &webSoc
     this->_webSocket = &webSocket;
 }
 
-void TBD_WiFi_Portail_WebServer::addNTP(TBD_WiFi_Portail_NTP &ntp)
+void TBD_WiFi_Portail_WebServer::addNTP(Service &ntp)
 {
     this->_ntp = &ntp;
 }
 
-void TBD_WiFi_Portail_WebServer::addESPInfos(TBD_WiFi_Portail_ESP &espInfos)
+void TBD_WiFi_Portail_WebServer::addESPInfos(Service &espInfos)
 {
     this->_espInfos = &espInfos;
 }
@@ -380,7 +380,7 @@ void TBD_WiFi_Portail_WebServer::handleGetRealTime(AsyncWebServerRequest *reques
         //this->_ntp->getTimeDateString();
         //if(this->_webSocket != nullptr) this->_webSocket->sendJsonByWebsocket2(this->_ntp->getRealTimeJson());
 
-        DynamicJsonDocument jsonObject = this->_ntp->getRealTimeJsonObj();
+        DynamicJsonDocument jsonObject = this->_ntp->toObj();
         if (jsonObject["day"].as<int>() != 0)
         {
             this->_serialDebug->println("That's working!");
@@ -409,7 +409,7 @@ void TBD_WiFi_Portail_WebServer::handleGetUptime(AsyncWebServerRequest *request)
         request->send(200, F("text/plain"), F("Response will be sended by WebSocket"));
         //this->_ntp->sendUptimeByWebSocket();
         if (this->_webSocket != nullptr)
-            this->_webSocket->sendJsonByWebsocket2(this->_ntp->getUptimeJson());
+            this->_webSocket->sendJsonByWebsocket2(this->_ntp->toJson2());
     }
     else
     {
@@ -427,7 +427,7 @@ void TBD_WiFi_Portail_WebServer::handleGetESPInfos(AsyncWebServerRequest *reques
         request->send(200, F("text/plain"), F("Response will be sended by WebSocket"));
         //this->_espInfos->sendHardwareInfosByWebSocket();
         if (this->_webSocket != nullptr)
-            this->_webSocket->sendJsonByWebsocket2(this->_espInfos->getHardwareInfosJson2());
+            this->_webSocket->sendJsonByWebsocket2(this->_espInfos->toJson());
     }
     else
     {

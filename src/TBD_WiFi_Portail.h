@@ -11,7 +11,7 @@
 #error This code is intended to run on the ESP8266 platform! Please check your Tools->Board setting.
 #endif
 
-#define WIFI_PORTAIL_VERSION "V0.0.3"
+#define WIFI_PORTAIL_VERSION "V0.0.4"
 
 //#define DEBUG_ESP_WIFI 1
 //#define DEBUG_ESP_PORT Serial
