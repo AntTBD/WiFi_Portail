@@ -17,8 +17,7 @@ TBD_WiFi_Portail_WebServer::TBD_WiFi_Portail_WebServer(TBD_WiFi_Portail_SerialDe
     this->_webSocket = nullptr;
     this->_ntp = nullptr;
     this->_espInfos = nullptr;
-
-    this->_allRoot = new AFArray<PathMethodOnRequest>();
+    this->_allRoots = new std::vector<PathMethodOnRequest>();
 }
 TBD_WiFi_Portail_WebServer::~TBD_WiFi_Portail_WebServer()
 {
@@ -33,7 +32,9 @@ TBD_WiFi_Portail_WebServer::~TBD_WiFi_Portail_WebServer()
     delete this->_espInfos;
 
     delete this->server;
-    delete this->_allRoot;
+
+    this->_allRoots->clear();
+    delete this->_allRoots;
 }
 
 void TBD_WiFi_Portail_WebServer::addRoot(const char *uri, WebRequestMethodComposite method, ArRequestHandlerFunction onRequest)
@@ -41,7 +42,7 @@ void TBD_WiFi_Portail_WebServer::addRoot(const char *uri, WebRequestMethodCompos
 
     // define root
     PathMethodOnRequest pathMethodOnRequest(uri, method, onRequest);
-    this->_allRoot->add(pathMethodOnRequest);
+    this->_allRoots->push_back(pathMethodOnRequest);
 }
 
 void TBD_WiFi_Portail_WebServer::addWebEvents(TBD_WiFi_Portail_WebEvents &webEvents)
@@ -112,13 +113,12 @@ void TBD_WiFi_Portail_WebServer::begin()
         { this->handleDebug(request); });
 
     this->_serialDebug->print(F("root: (nbr="));
-    this->_serialDebug->print(this->_allRoot->size() + 3);
+    this->_serialDebug->print(this->_allRoots->size() + 3);
     this->_serialDebug->println(F(")"));
 
     // add preconfigurated root with function
-    while (this->_allRoot->has_next())
+    for (PathMethodOnRequest& pathMethodOnRequestTemp : *this->_allRoots)
     {
-        PathMethodOnRequest pathMethodOnRequestTemp = this->_allRoot->next();
         this->server->on(pathMethodOnRequestTemp.uri, pathMethodOnRequestTemp.method, pathMethodOnRequestTemp.onRequest);
         this->_serialDebug->print(F(" "));
         this->_serialDebug->println(pathMethodOnRequestTemp.uri);
@@ -210,7 +210,7 @@ void TBD_WiFi_Portail_WebServer::handleWebRequests(AsyncWebServerRequest *reques
 
     // si ne trouve pas le fichier
     String message;
-    message.reserve(255);
+    message.reserve(500);
     message = F("File Not Detected :\n");
     message += F("\n  URI: ");
     message += F("http://");

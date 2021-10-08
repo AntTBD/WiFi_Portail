@@ -12,16 +12,12 @@
 #include "TBD_WiFi_Portail_WebServer.h"
 #include "TBD_WiFi_Portail_WebEvents.h"
 //#include "TBD_WiFi_Portail_Wifi.h"
-//#include "TBD_WiFi_Portail_NTP.h"
-//#include "TBD_WiFi_Portail_ESP.h"
 
 #include <ESPAsyncTCP.h>       // https://github.com/me-no-dev/ESPAsyncTCP
 #include <ESPAsyncWebServer.h> // https://github.com/me-no-dev/ESPAsyncWebServer
 
-//#include <list>
 #include <vector>
 #include <ArduinoJson.h>
-#include <AFArray.h>
 
 // empty function
 static void handleNULLWebSocket(AsyncWebSocketClient * client = nullptr, String value = "") {}
@@ -64,13 +60,7 @@ public:
     void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
 
     void close_WebSocket();
-    /*void sendJsonByWebsocket(const JsonDocument &doc, AsyncWebSocketClient * client = nullptr);
-    void sendJsonByWebsocket2(DynamicJsonDocument doc);
-    //void sendDataWs(AsyncWebSocketClient * client);
-    void ws_send_to_client(AsyncWebSocketClient * client, String message);
-    void ws_send_to_all_client(String message);
-    void ws_send_to_all_client(AsyncWebSocketMessageBuffer *buffer);
-    void envoieAllInfosNewClient(AsyncWebSocketClient * client);
+    /*void envoieAllInfosNewClient(AsyncWebSocketClient * client);
     void envoieHardwareInfosToClient(AsyncWebSocketClient * client);
     void envoieValuesToClient(AsyncWebSocketClient * client);*/
 
@@ -96,8 +86,7 @@ private:
     Service *_espInfos;
 
     String _root;
-    AFArray<PathMethodOnRequestWebSocket> *_allCommand;
-    std::list<PathMethodOnRequestWebSocket> test;
+    std::vector<PathMethodOnRequestWebSocket> *_allCommands;
 };
 
 #endif //TBD_WIFI_PORTAIL_WEBSOCKET_H

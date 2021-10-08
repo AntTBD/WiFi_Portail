@@ -14,8 +14,6 @@
 #include "TBD_WiFi_Portail_WebEvents.h"
 #include "TBD_WiFi_Portail_WebSocket.h"
 #include "TBD_WiFi_Portail_Wifi.h"
-//#include "TBD_WiFi_Portail_NTP.h"
-//#include "TBD_WiFi_Portail_ESP.h"
 
 // to get secure server (not work realy) https://github.com/me-no-dev/ESPAsyncWebServer/issues/392 or https://gitlab.users.ch.eu.org:10443/smarthome/eaws-ssl-updater
 
@@ -23,7 +21,7 @@
 #include <ESPAsyncTCP.h>       // https://github.com/me-no-dev/ESPAsyncTCP
 #include <ESPAsyncWebServer.h> // https://github.com/me-no-dev/ESPAsyncWebServer
 
-#include <AFArray.h>
+#include <vector>
 #include <ArduinoJson.h>
 
 static String IpToString(IPAddress adress)
@@ -93,7 +91,7 @@ private:
     Service *_espInfos;
 
     int _port;
-    AFArray<PathMethodOnRequest> *_allRoot;
+    std::vector<PathMethodOnRequest> *_allRoots;
 
     const char *_loginConsole_username;
     const char *_loginConsole_password;

@@ -47,8 +47,8 @@ TBD_WiFi_Portail_ESP::TBD_WiFi_Portail_ESP():Service() {
             "bootver",
             "cpufreq",
             "freeheap",
-            "memsketch",
-            "allmems",
+            "sketch",
+            "filesystem",
             "lastreset",
             "wifihead",
             "wifimode",
@@ -65,73 +65,46 @@ TBD_WiFi_Portail_ESP::TBD_WiFi_Portail_ESP():Service() {
             "conx",
             "autoconx"
     };*/
-    this->_infosName = new AFArray<String>();
-    this->_infosName->add("esphead");
-    this->_infosName->add("uptime");
-    this->_infosName->add("chipid");
-    this->_infosName->add("fchipid");
-    this->_infosName->add("idesize");
-    this->_infosName->add("realsize");
-    this->_infosName->add("flashspeed");
-    this->_infosName->add("flashmode");// ///////
-    this->_infosName->add("sdkver");
-    this->_infosName->add("corever");
-    this->_infosName->add("bootver");
-    this->_infosName->add("cpufreq");
-    this->_infosName->add("freeheap");
-    this->_infosName->add("memsketch");
-    this->_infosName->add("allmems");
-    this->_infosName->add("lastreset");
-    this->_infosName->add("wifihead");
-    this->_infosName->add("wifimode");
-    this->_infosName->add("apip");
-    this->_infosName->add("apmac");
-    this->_infosName->add("ssid");
-    this->_infosName->add("bssid");
-    this->_infosName->add("host");
-    this->_infosName->add("staip");
-    this->_infosName->add("stamac");
-    this->_infosName->add("stasub");
-    this->_infosName->add("stagw");
-    this->_infosName->add("dnss");
-    this->_infosName->add("conx");
-    this->_infosName->add("autoconx");
 
-    this->_deviceStatus = new AFArray<String>();
-    this->_deviceStatus->add("uptime");
-    this->_deviceStatus->add("chipid");
-    this->_deviceStatus->add("fchipid");
-    this->_deviceStatus->add("idesize");
-    this->_deviceStatus->add("realsize");
-    this->_deviceStatus->add("flashspeed");
-    this->_deviceStatus->add("flashmode");// ///////
-    this->_deviceStatus->add("sdkver");
-    this->_deviceStatus->add("corever");
-    this->_deviceStatus->add("bootver");
-    this->_deviceStatus->add("cpufreq");
-    this->_deviceStatus->add("freeheap");
-    this->_deviceStatus->add("sketch");
-    this->_deviceStatus->add("filesystem");
-    this->_deviceStatus->add("lastreset");
+    this->_deviceStatus = new std::vector<String>();
+    this->_deviceStatus->insert(this->_deviceStatus->end(), {
+            F("uptime"),
+            F("chipid"),
+            F("fchipid"),
+            F("idesize"),
+            F("realsize"),
+            F("flashspeed"),
+            F("flashmode"),// ///////
+            F("sdkver"),
+            F("corever"),
+            F("bootver"),
+            F("cpufreq"),
+            F("freeheap"),
+            F("heapfrag"),
+            F("sketch"),
+            F("filesystem"),
+            F("lastreset")
+    });
 
-    this->_networkStatus = new AFArray<String>();
-    this->_networkStatus->add("wifimode");
-    this->_networkStatus->add("apip");
-    this->_networkStatus->add("apmac");
-    this->_networkStatus->add("ssid");
-    this->_networkStatus->add("bssid");
-    this->_networkStatus->add("host");
-    this->_networkStatus->add("staip");
-    this->_networkStatus->add("stamac");
-    this->_networkStatus->add("stasub");
-    this->_networkStatus->add("stagw");
-    this->_networkStatus->add("dnss");
-    this->_networkStatus->add("conx");
-    this->_networkStatus->add("autoconx");
+    this->_networkStatus = new std::vector<String>();
+    this->_networkStatus->insert(this->_networkStatus->end(), {
+            F("wifimode"),
+            F("apip"),
+            F("apmac"),
+            F("ssid"),
+            F("bssid"),
+            F("host"),
+            F("staip"),
+            F("stamac"),
+            F("stasub"),
+            F("stagw"),
+            F("dnss"),
+            F("conx"),
+            F("autoconx")
+    });
 
     this->_ntp = nullptr;
     this->_fileSystem = nullptr;
-    //this->_webSocket = nullptr;
 }
 
 /// Destructor
@@ -140,10 +113,10 @@ TBD_WiFi_Portail_ESP::~TBD_WiFi_Portail_ESP(){
     delete this->_ntp;
 #endif // USE_NTP
     delete this->_fileSystem;
-    //delete this->_webSocket;
 
-    delete this->_infosName;
+    this->_deviceStatus->clear();
     delete this->_deviceStatus;
+    this->_networkStatus->clear();
     delete this->_networkStatus;
 }
 
@@ -157,63 +130,6 @@ void TBD_WiFi_Portail_ESP::addFileSystem(TBD_WiFi_Portail_FileSystem& fileSystem
     this->_fileSystem = &fileSystem;
 }
 
-/// Add WebSocket class
-/// Never used
-/*void TBD_WiFi_Portail_ESP::addWebSocket(TBD_WiFi_Portail_WebSocket& webSocket){
-    this->_webSocket = &webSocket;
-}*/
-
-/// Never used
-/*// -------------------------------- Fonction pour avoir toutes les informations hardware de l'esp8266 -------------------------------------------
-DynamicJsonDocument TBD_WiFi_Portail_ESP::getHardwareInfosJson() {
-    DynamicJsonDocument docHardwareInfos(
-            JSON_OBJECT_SIZE(1) + this->_infosName.size() * JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(this->_infosName.size()) + 2000);
-    docHardwareInfos["resultof"] = "getStatus";
-    JsonObject hardwareInfos = docHardwareInfos.createNestedObject(F("value"));
-
-    String infosData[2];
-    while (this->_infosName.has_next()) {
-        String name = this->_infosName.next();
-        JsonObject hardwareInfos_datas = hardwareInfos.createNestedObject(name);
-        this->getInfoData(name, infosData);
-
-        hardwareInfos_datas[F("name")] = infosData[0];
-        hardwareInfos_datas[F("value")] = infosData[1];
-    }
-    return docHardwareInfos;
-
-
-}
-
-/// Never used
-String TBD_WiFi_Portail_ESP::getHardwareInfosString() {
-    String jsonStringHardwareInfos;
-    jsonStringHardwareInfos.reserve(2000);
-    serializeJson(this->getHardwareInfosJson(), jsonStringHardwareInfos); // on remplie la string avec les infos de JSONInfo sous forme sérialisé
-    //Serial.println(jsonStringHardwareInfos);
-    return jsonStringHardwareInfos;
-}
-
-/// Never used
-void TBD_WiFi_Portail_ESP::sendHardwareInfosByWebSocket(){
-    if(this->_webSocket != nullptr) {
-        DynamicJsonDocument docHardwareInfos(
-                JSON_OBJECT_SIZE(1) + this->_infosName.size() * JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(this->_infosName.size()) + 2000);
-        docHardwareInfos["resultof"] = "getStatus";
-        JsonObject hardwareInfos = docHardwareInfos.createNestedObject(F("value"));
-
-        String infosData[2];
-        while (this->_infosName.has_next()) {
-            String name = this->_infosName.next();
-            JsonObject hardwareInfos_datas = hardwareInfos.createNestedObject(name);
-            this->getInfoData(name, infosData);
-
-            hardwareInfos_datas[F("name")] = infosData[0];
-            hardwareInfos_datas[F("value")] = infosData[1];
-        }
-        this->_webSocket->sendJsonByWebsocket(&docHardwareInfos);
-    }
-}*/
 /// Convert all infos to JSON sorted by devices datas and network datas
 DynamicJsonDocument TBD_WiFi_Portail_ESP::getHardwareInfosJson2() {
     DynamicJsonDocument docHardwareInfos(
@@ -226,14 +142,14 @@ DynamicJsonDocument TBD_WiFi_Portail_ESP::getHardwareInfosJson2() {
     hardwareInfos[F("softVersion")] = WIFI_PORTAIL_VERSION;
     JsonObject statusInfos = hardwareInfos.createNestedObject(F("statusInfos"));
     JsonArray deviceInfos = statusInfos.createNestedArray(F("device"));
-    while (this->_deviceStatus->has_next()) {
-        String name = this->_deviceStatus->next();
+    for (String& name : *this->_deviceStatus)
+    {
         sNameValue info = this->getInfoData2(name);
         deviceInfos.add(serialized(info.ToSting()));
     }
     JsonArray networkInfos = statusInfos.createNestedArray(F("network"));
-    while (this->_networkStatus->has_next()) {
-        String name = this->_networkStatus->next();
+    for (String& name : *this->_networkStatus)
+    {
         sNameValue info = this->getInfoData2(name);
         networkInfos.add(serialized(info.ToSting()));
     }
@@ -251,14 +167,14 @@ DynamicJsonDocument TBD_WiFi_Portail_ESP::getHardwareInfosJsonObj() {
     doc[F("softVersion")] = WIFI_PORTAIL_VERSION;
     JsonObject statusInfos = doc.createNestedObject(F("statusInfos"));
     JsonArray deviceInfos = statusInfos.createNestedArray(F("device"));
-    while (this->_deviceStatus->has_next()) {
-        String name = this->_deviceStatus->next();
+    for (String& name : *this->_deviceStatus)
+    {
         sNameValue info = this->getInfoData2(name);
         deviceInfos.add(serialized(info.ToSting()));
     }
     JsonArray networkInfos = statusInfos.createNestedArray(F("network"));
-    while (this->_networkStatus->has_next()) {
-        String name = this->_networkStatus->next();
+    for (String& name : *this->_networkStatus)
+    {
         sNameValue info = this->getInfoData2(name);
         networkInfos.add(serialized(info.ToSting()));
     }
@@ -337,13 +253,20 @@ sNameValue TBD_WiFi_Portail_ESP::getInfoData2(const String& id) {
         info.value += F(" MHz");
     } else if (id == F("freeheap")) {
         info.name = F("Memory - Free Heap (RAM)");
-        info.value = (String) ESP.getFreeHeap();
-        info.value += F(" bytes available <br>(0% is clean, more than ~50% is not harmless)");
-        info.progress.value = (float) (ESP.getHeapFragmentation());
+        if (this->_fileSystem != nullptr) info.value = this->_fileSystem->formatBytes(ESP.getFreeHeap()) + F(" / ") + this->_fileSystem->formatBytes(32768);// 32768 = IRAM from compiler
+        else info.value = (String) ESP.getFreeHeap() + F(" / ") + String(32768) + F(" bytes");
+        info.value += F(" <i>(Available / Total)</i>");
+        info.progress.value = (float) (ESP.getFreeHeap());
         info.progress.min = 0;
-        info.progress.max = 100;
+        info.progress.max = 32768;// 32768 = IRAM from compiler
+        info.progress.unity = "bytes";
+    } else if (id == F("heapfrag")) {
+        info.name = F("Memory - Heap Fragmentation");
+        info.value = F("(0% is clean, more than ~50% is not harmless)"); // https://cpp4arduino.com/2018/11/06/what-is-heap-fragmentation.html#measuring-the-fragmentation
+        info.progress.value = (float) (ESP.getHeapFragmentation());
+        info.progress.min = 100;
+        info.progress.max = 0;
         info.progress.unity = "%";
-        //F("(0% is clean, more than ~50% is not harmless)");
     } else if (id == F("sketch")) {
         info.name = F("Memory - Sketch Size");
         if (this->_fileSystem != nullptr) info.value = this->_fileSystem->formatBytes(ESP.getSketchSize());
@@ -352,10 +275,13 @@ sNameValue TBD_WiFi_Portail_ESP::getInfoData2(const String& id) {
         if (this->_fileSystem != nullptr)
             info.value += this->_fileSystem->formatBytes(ESP.getSketchSize() + ESP.getFreeSketchSpace());
         else info.value += (String)(ESP.getSketchSize() + ESP.getFreeSketchSpace());
-        info.value += F(" (Used / Total)");
+        info.value += F(" <i>(Used / Total)</i>");
+#ifdef USE_OTA
+        if (ESP.getSketchSize() > ESP.getFreeSketchSpace()) info.value += F("<br><small style=\"color:red\">Sketch too big for OTA transfer!</small>");
+#endif // USE_OTA
         info.progress.value = (float) (ESP.getSketchSize());
-        info.progress.min = 0;
-        info.progress.max = (float) (ESP.getSketchSize() + ESP.getFreeSketchSpace());
+        info.progress.min = (float) (ESP.getSketchSize() + ESP.getFreeSketchSpace());
+        info.progress.max = 0;
         info.progress.unity = "bytes";
     } else if (id == F("filesystem")) {
         //|--------------|-------|---------------|--|--|--|--|--|
@@ -364,15 +290,17 @@ sNameValue TBD_WiFi_Portail_ESP::getInfoData2(const String& id) {
 
         info.name = F("Memory - FileSystem Size");
         FSInfo fsInfo;
-        if (this->_fileSystem != nullptr) this->_fileSystem->fileSystem->info(fsInfo);
-        info.value += (String)(fsInfo.usedBytes);
-        info.value += F(" / ");
-        info.value += (String)(fsInfo.totalBytes);
-        info.value += F(" (Used / Total bytes)");
-        info.progress.value = (float) (fsInfo.usedBytes);
-        info.progress.min = 0;
-        info.progress.max = (float) (fsInfo.totalBytes);;
-        info.progress.unity = "bytes";
+        if (this->_fileSystem != nullptr) {
+            this->_fileSystem->fileSystem->info(fsInfo);
+            info.value += this->_fileSystem->formatBytes(fsInfo.usedBytes);
+            info.value += F(" / ");
+            info.value += this->_fileSystem->formatBytes(fsInfo.totalBytes);
+            info.value += F(" <i>(Used / Total)</i>");
+            info.progress.value = (float) (fsInfo.usedBytes);
+            info.progress.min = (float) (fsInfo.totalBytes);
+            info.progress.max = 0;
+            info.progress.unity = "bytes";
+        }
     } else if (id == F("lastreset")) {
         info.name = F("Last reset reason");
         info.value = (String) ESP.getResetReason();

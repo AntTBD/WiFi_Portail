@@ -12,7 +12,6 @@
 #include "Service.h"
 
 #include "TBD_WiFi_Portail_SerialDebug.h"
-//#include "TBD_WiFi_Portail_WebSocket.h"
 
 // from https://github.com/gmag11/NtpClient/blob/master/examples/NTPClientBasic/NTPClientBasic.ino
 #include <ESPAsyncUDP.h>
@@ -51,7 +50,6 @@ class TBD_WiFi_Portail_NTP : public Service
 public:
     TBD_WiFi_Portail_NTP(TBD_WiFi_Portail_SerialDebug &serialDebug, const String &ntpServerName = "pool.ntp.org");
     ~TBD_WiFi_Portail_NTP();
-    //void addWebSocket(TBD_WiFi_Portail_WebSocket& webSocket);
 
     void begin();
     void loop();
@@ -84,11 +82,7 @@ public:
     DynamicJsonDocument getRealTimeJson();
     DynamicJsonDocument getRealTimeJsonObj();
     String getRealTimeString();
-    //void sendRealTimeByWebSocket();
     DynamicJsonDocument getUptimeJson();
-    //void sendUptimeByWebSocket();
-
-
 
     DynamicJsonDocument toJson() override { return this->getRealTimeJson(); };
     DynamicJsonDocument toJson2() override { return this->getUptimeJson(); };
@@ -100,7 +94,6 @@ public:
 
 private:
     TBD_WiFi_Portail_SerialDebug *_serialDebug;
-    //TBD_WiFi_Portail_WebSocket* _webSocket;
 
     boolean _syncEventTriggered = false; // True if a time even has been triggered
     boolean _couldSendTime = false;

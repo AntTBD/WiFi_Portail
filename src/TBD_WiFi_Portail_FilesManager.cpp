@@ -170,7 +170,7 @@ void TBD_WiFi_Portail_FilesManager::loadConfigAllWifi(const String &filename, Wi
         delete apTemp;
     }
 
-    wifiAll->getAllSTA()->reset();
+    wifiAll->resetSTA();
     if (obj[F("allSTA")])
     {
         JsonArrayConst arrayAllSTA = obj[F("allSTA")]; //.to<JsonArray>();
@@ -193,7 +193,7 @@ void TBD_WiFi_Portail_FilesManager::loadConfigAllWifi(const String &filename, Wi
                 staTemp->setGateway(oneSTA[F("gateway")].as<String>());
             if (oneSTA[F("autoDisable")])
                 staTemp->setAutoDisable(oneSTA[F("autoDisable")].as<int>());
-            wifiAll->getAllSTA()->add(*staTemp);
+            wifiAll->addSTA(*staTemp);
             delete staTemp;
         }
     }

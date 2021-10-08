@@ -251,7 +251,7 @@ WifiAll::WifiAll(const String &hostname, const String &mdnsName)
   this->mdnsName = mdnsName;
   this->mode = WIFI_OFF;
   this->ap = new AP();
-  this->allSTA = new AFArray<STA>();
+  this->allSTA = new std::vector<STA>();
   this->resetWifi = false;
 }
 
@@ -261,7 +261,7 @@ WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap)
   this->mdnsName = mdnsName;
   this->mode = WIFI_OFF;
   *this->ap = ap;
-  this->allSTA = new AFArray<STA>();
+  this->allSTA = new std::vector<STA>();
   this->resetWifi = false;
 }
 
@@ -271,7 +271,7 @@ WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap, bo
   this->mdnsName = mdnsName;
   this->mode = WIFI_OFF;
   *this->ap = ap;
-  this->allSTA = new AFArray<STA>();
+  this->allSTA = new std::vector<STA>();
   this->resetWifi = resetWifi;
 }
 
@@ -281,11 +281,11 @@ WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap, Wi
   this->mdnsName = mdnsName;
   this->mode = mode;
   *this->ap = ap;
-  this->allSTA = new AFArray<STA>();
+  this->allSTA = new std::vector<STA>();
   this->resetWifi = resetWifi;
 }
 
-WifiAll::WifiAll(const String &hostname, const String &mdnsName, AFArray<STA> &allSTA)
+WifiAll::WifiAll(const String &hostname, const String &mdnsName, std::vector<STA> &allSTA)
 {
   this->hostname = hostname;
   this->mdnsName = mdnsName;
@@ -295,7 +295,7 @@ WifiAll::WifiAll(const String &hostname, const String &mdnsName, AFArray<STA> &a
   this->resetWifi = false;
 }
 
-WifiAll::WifiAll(const String &hostname, const String &mdnsName, AFArray<STA> &allSTA, bool resetWifi)
+WifiAll::WifiAll(const String &hostname, const String &mdnsName, std::vector<STA> &allSTA, bool resetWifi)
 {
   this->hostname = hostname;
   this->mdnsName = mdnsName;
@@ -305,7 +305,7 @@ WifiAll::WifiAll(const String &hostname, const String &mdnsName, AFArray<STA> &a
   this->resetWifi = resetWifi;
 }
 
-WifiAll::WifiAll(const String &hostname, const String &mdnsName, AFArray<STA> &allSTA, WiFiMode_t mode, bool resetWifi)
+WifiAll::WifiAll(const String &hostname, const String &mdnsName, std::vector<STA> &allSTA, WiFiMode_t mode, bool resetWifi)
 {
   this->hostname = hostname;
   this->mdnsName = mdnsName;
@@ -315,7 +315,7 @@ WifiAll::WifiAll(const String &hostname, const String &mdnsName, AFArray<STA> &a
   this->resetWifi = resetWifi;
 }
 
-WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap, AFArray<STA> &allSTA)
+WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap, std::vector<STA> &allSTA)
 {
   this->hostname = hostname;
   this->mdnsName = mdnsName;
@@ -325,7 +325,7 @@ WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap, AF
   this->resetWifi = false;
 }
 
-WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap, AFArray<STA> &allSTA, WiFiMode_t mode)
+WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap, std::vector<STA> &allSTA, WiFiMode_t mode)
 {
   this->hostname = hostname;
   this->mdnsName = mdnsName;
@@ -335,7 +335,7 @@ WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap, AF
   this->resetWifi = false;
 }
 
-WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap, AFArray<STA> &allSTA, bool resetWifi)
+WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap, std::vector<STA> &allSTA, bool resetWifi)
 {
   this->hostname = hostname;
   this->mdnsName = mdnsName;
@@ -345,7 +345,7 @@ WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap, AF
   this->resetWifi = resetWifi;
 }
 
-WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap, AFArray<STA> &allSTA, WiFiMode_t mode, bool resetWifi)
+WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap, std::vector<STA> &allSTA, WiFiMode_t mode, bool resetWifi)
 {
   this->hostname = hostname;
   this->mdnsName = mdnsName;
@@ -400,14 +400,24 @@ void WifiAll::setAP(const AP _ap)
   *this->ap = _ap;
 }
 
-AFArray<STA> *WifiAll::getAllSTA()
+std::vector<STA> *WifiAll::getAllSTA()
 {
   return this->allSTA;
 }
 
-void WifiAll::setAllSTA(AFArray<STA> &_allSTA)
+void WifiAll::setAllSTA(std::vector<STA> &_allSTA)
 {
   this->allSTA = &_allSTA;
+}
+
+void WifiAll::addSTA(const STA &sta)
+{
+    this->allSTA->push_back(sta);
+}
+
+void WifiAll::resetSTA()
+{
+    this->allSTA->clear();
 }
 
 bool WifiAll::isResetWifi() const
@@ -431,25 +441,25 @@ ostream &operator<<(ostream &os, WifiAll &all) {
   return os;
 }
 */
-String WifiAll::toString() const
-{ //.c_str()
-  String result = (String)F("---------- WifiAll ---------") + F("\n") + F("hostname:         ") + String(this->hostname) + F("\n") + F("mdnsName:         ") + String(this->mdnsName) + F("\n") + F("mode:             ") + String(this->mode) + F("\n") + F("AP: ") + F("\n") + this->ap->toString() + F("\n") + F("All STA: ") + F("\n");
-  while (this->allSTA->has_next())
-  {
-    result += this->allSTA->next().toString() + F("\n");
-  }
-  result += (String)F("resetWifi: ") + (this->resetWifi ? F("true") : F("false")) + F("\n") + F("----------------------------");
-  return result;
+String WifiAll::toString() const //.c_str()
+{
+    String result = (String)F("---------- WifiAll ---------") + F("\n") + F("hostname:         ") + String(this->hostname) + F("\n") + F("mdnsName:         ") + String(this->mdnsName) + F("\n") + F("mode:             ") + String(this->mode) + F("\n") + F("AP: ") + F("\n") + this->ap->toString() + F("\n") + F("All STA: ") + F("\n");
+    for (STA& sta : *this->allSTA)
+    {
+        result += sta.toString() + F("\n");
+    }
+    result += (String)F("resetWifi: ") + (this->resetWifi ? F("true") : F("false")) + F("\n") + F("----------------------------");
+    return result;
 }
 
 String WifiAll::serialized() const
 {
   String result = (String)F("{\n") + F("\"hostname\":\"") + String(this->hostname) + F("\",\n") + F("\"mdnsName\":\"") + String(this->mdnsName) + F("\",\n") + F("\"mode\":\"") + String(this->mode) + F("\",\n") + F("\"AP\":\n") + this->ap->serialized() + F(",\n") + F("\"allSTA\":[\n");
   unsigned int i = 0;
-  while (this->allSTA->has_next())
+  for (STA& sta : *this->allSTA)
   {
     i++;
-    result += this->allSTA->next().serialized();
+    result += sta.serialized();
     if (i != this->allSTA->size())
     {
       result += F(",");
@@ -465,10 +475,10 @@ String WifiAll::serializedForSend() const
 {
   String result = (String)F("{") + F("\"mode\":\"") + String(this->mode) + F("\",") + F("\"AP\":") + this->ap->serialized() + F(",") + F("\"allSTA\":[");
   int i = 0;
-  while (this->allSTA->has_next())
+  for (STA& sta : *this->allSTA)
   {
     i++;
-    result += this->allSTA->next().serialized();
+    result += sta.serialized();
     if (i != this->allSTA->size())
     {
       result += (String)F(",");

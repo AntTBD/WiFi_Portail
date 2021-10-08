@@ -10,9 +10,8 @@
 #include "Service.h"
 #include "TBD_WiFi_Portail_FileSystem.h"
 #include <ESP8266WiFi.h>
-//#include "TBD_WiFi_Portail_WebSocket.h"
 
-#include <AFArray.h>
+#include <vector>
 
 typedef struct Progress
 {
@@ -24,7 +23,9 @@ typedef struct Progress
     Progress() : value(-1.0), min(0.0), max(100.0), unity(F("")) {}
     ~Progress() {}
 
-    String ToSting() const { return (String)F("{\"value\":\"") + String(this->value) + F("\", \"min\":\"") + String(this->min) + F("\", \"max\":\"") + String(this->max) + F("\", \"unity\":\"") + this->unity + F("\"}"); }
+    String ToSting() const {
+        return (String)F("{\"value\":\"") + String(this->value) + F("\", \"min\":\"") + String(this->min) + F("\", \"max\":\"") + String(this->max) + F("\", \"unity\":\"") + this->unity + F("\"}");
+    }
 } sProgress;
 
 typedef struct NameValue
@@ -35,16 +36,19 @@ typedef struct NameValue
 
     NameValue() : name(F("")), value(F(""))
     { /*progress = new sProgress ();*/
+        name.reserve(40);
+        value.reserve(100);
     }
     ~NameValue() {}
 
     String ToSting() const
     {
-        String result = (String)F("{\"name\":\"") + this->name + F("\"");
+        String result;
+        result.reserve(350);
+        result = (String)F("{\"name\":\"") + this->name + F("\"");
         if (this->value != "")
         {
             result += (String)F(", \"value\":\"") + this->value + F("\"");
-            ;
         }
         if (this->progress.value != -1.0)
         {
@@ -113,14 +117,10 @@ public:
     ~TBD_WiFi_Portail_ESP();
     void addNTP(Service &ntp);
     void addFileSystem(TBD_WiFi_Portail_FileSystem &fileSystem);
-    //void addWebSocket(TBD_WiFi_Portail_WebSocket& webSocket);
 
-    //DynamicJsonDocument getHardwareInfosJson();
     DynamicJsonDocument getHardwareInfosJson2();
     DynamicJsonDocument getHardwareInfosJsonObj();
-    //String getHardwareInfosString();
     String getHardwareInfosString2();
-    //void sendHardwareInfosByWebSocket();
 
 
     DynamicJsonDocument toJson() override { return this->getHardwareInfosJson2(); };
@@ -130,17 +130,13 @@ public:
     String toString() override { return this->getHardwareInfosString2(); };
 
 private:
-    AFArray<String> *_infosName;
-    //String _infosName[];
-
-    AFArray<String> *_deviceStatus;
-    AFArray<String> *_networkStatus;
+    std::vector<String> *_deviceStatus;
+    std::vector<String> *_networkStatus;
 
     uint16_t nbInfos;
 
     Service *_ntp;
     TBD_WiFi_Portail_FileSystem *_fileSystem;
-    //TBD_WiFi_Portail_WebSocket* _webSocket;
 
     //void getInfoData(const String& id, String (&tab)[2]);
     sNameValue getInfoData2(const String &id);

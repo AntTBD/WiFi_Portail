@@ -29,7 +29,7 @@ public:
     void onWifiGotIP(const WiFiEventStationModeGotIP &event);
     bool startAP(AP *ap);
     void fallbacktoAPMode();
-    bool connectSTA(AFArray<STA> *allSTA, String hostname, uint32_t connectionTimeoutMUltiWifi);
+    bool connectSTA(std::vector<STA> *allSTA, String hostname, uint32_t connectionTimeoutMUltiWifi);
     void infosWifi();
     String wifiStatusToString() const;
     DynamicJsonDocument getNetworkInfosJson();

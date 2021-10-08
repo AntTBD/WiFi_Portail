@@ -21,21 +21,15 @@ TBD_WiFi_Portail_NTP::TBD_WiFi_Portail_NTP(TBD_WiFi_Portail_SerialDebug &serialD
     this->_interval = 63;
     this->_ntp = &NTP;
     this->_udp = new AsyncUDP();
-    //this->_webSocket = nullptr;
     this->_couldSendTime = false;
 }
 
 TBD_WiFi_Portail_NTP::~TBD_WiFi_Portail_NTP()
 {
     delete this->_serialDebug;
-    //delete this->_webSocket;
     this->_ntp->stop();
     this->_couldSendTime = false;
 }
-/*
-void TBD_WiFi_Portail_NTP::addWebSocket(TBD_WiFi_Portail_WebSocket& webSocket){
-    this->_webSocket = &webSocket;
-}*/
 
 void TBD_WiFi_Portail_NTP::begin()
 {
@@ -255,25 +249,6 @@ String TBD_WiFi_Portail_NTP::getRealTimeString()
     //Serial.println(jsonStringRealTime);
     return jsonStringRealTime;
 }
-/*
-void TBD_WiFi_Portail_NTP::sendRealTimeByWebSocket(){
-    if(this->_webSocket != nullptr) {
-        DynamicJsonDocument doc(JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(8));
-        doc["resultof"] = "getRealTime";
-        JsonObject realTime = doc.createNestedObject("value");
-        realTime["day"]         = this->_realTime.day;
-        realTime["month"]       = this->_realTime.month;
-        realTime["year"]        = this->_realTime.year;
-        realTime["hour"]        = this->_realTime.hour;
-        realTime["min"]         = this->_realTime.min;
-        realTime["sec"]         = this->_realTime.sec;
-        realTime["timezone"]    = this->_realTime.timezone;
-        realTime["summerTime"]  = this->_realTime.summerTime ? 1 : 0;
-
-
-        this->_webSocket->sendJsonByWebsocket(&doc);
-    }
-}*/
 
 /// Convert date to JSON
 DynamicJsonDocument TBD_WiFi_Portail_NTP::getUptimeJson()
@@ -284,16 +259,5 @@ DynamicJsonDocument TBD_WiFi_Portail_NTP::getUptimeJson()
 
     return doc;
 }
-/*
-void TBD_WiFi_Portail_NTP::sendUptimeByWebSocket(){
-    if(this->_webSocket != nullptr) {
-        DynamicJsonDocument doc(JSON_ARRAY_SIZE(2)+JSON_OBJECT_SIZE(4));
-        doc["resultof"] = "getUptime";
-        doc["value"] = this->getUptimeString();
-
-
-        this->_webSocket->sendJsonByWebsocket(&doc);
-    }
-}*/
 
 #endif // USE_NTP

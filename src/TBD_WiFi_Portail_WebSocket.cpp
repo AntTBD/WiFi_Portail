@@ -14,7 +14,7 @@ TBD_WiFi_Portail_WebSocket::TBD_WiFi_Portail_WebSocket(TBD_WiFi_Portail_SerialDe
     this->_webEvents = nullptr;
     this->_ntp = nullptr;
     this->_espInfos = nullptr;
-    this->_allCommand = new AFArray<PathMethodOnRequestWebSocket>();
+    this->_allCommands = new std::vector<PathMethodOnRequestWebSocket>();
 }
 TBD_WiFi_Portail_WebSocket::~TBD_WiFi_Portail_WebSocket()
 {
@@ -28,7 +28,9 @@ TBD_WiFi_Portail_WebSocket::~TBD_WiFi_Portail_WebSocket()
     //delete this->_wifi;
 
     delete this->webSocket;
-    delete this->_allCommand;
+
+    this->_allCommands->clear();
+    delete this->_allCommands;
 }
 
 void TBD_WiFi_Portail_WebSocket::addWebEvents(TBD_WiFi_Portail_WebEvents &webEvents)
@@ -49,7 +51,8 @@ void TBD_WiFi_Portail_WebSocket::addCommand(const char *commandNameIn, const cha
 {
     // define command
     PathMethodOnRequestWebSocket pathMethodOnRequestWebSocket(commandNameIn, commandNameOut, onCommand);
-    this->_allCommand->add(pathMethodOnRequestWebSocket);
+    this->_allCommands->push_back(pathMethodOnRequestWebSocket);
+
 }
 
 // ------------------------------------------ Start a WebSocket server -----------------------------------------
@@ -94,13 +97,12 @@ void TBD_WiFi_Portail_WebSocket::begin()
             { this->handleCommandNetwork(client, value); });
 
         this->_serialDebug->print(F("commands: (nbr="));
-        this->_serialDebug->print(this->_allCommand->size());
+        this->_serialDebug->print(this->_allCommands->size());
         this->_serialDebug->println(F(")"));
-        while (this->_allCommand->has_next())
-        {
-            PathMethodOnRequestWebSocket pathMethodOnRequestWebSocketTemp = this->_allCommand->next();
 
-            this->_serialDebug->println((String)F("  ") + pathMethodOnRequestWebSocketTemp.commandNameIn);
+        for (PathMethodOnRequestWebSocket& command : *this->_allCommands)
+        {
+            this->_serialDebug->println((String)F("  ") + command.commandNameIn);
         }
     }
     else
@@ -260,13 +262,12 @@ void TBD_WiFi_Portail_WebSocket::handleReceivedMessage(const String &message, As
 
     bool commandFound = false;
     // check if command was recognized and exist in list
-    /*while (this->_allCommand->has_next()) //&& commandFound == false)
+    for (PathMethodOnRequestWebSocket& commandTemp : *this->_allCommands)
     {
-        PathMethodOnRequestWebSocket pathMethodOnRequestWebSocketTemp = this->_allCommand->next();
-        if (command == pathMethodOnRequestWebSocketTemp.commandNameIn)
+        if (commandFound == false && command == commandTemp.commandNameIn)
         {
             commandFound = true;
-            pathMethodOnRequestWebSocketTemp.onCommand(numClient, value);
+            commandTemp.onCommand(client, value);
             break; // no need to check all function if command existe
         }
     }
@@ -325,25 +326,6 @@ void TBD_WiFi_Portail_WebSocket::send(const String &data, AsyncWebSocketClient *
         }
     }
 }
-//-----------------------------------------------------------------------
-/*
-void TBD_WiFi_Portail_WebSocket::sendJson(const JsonDocument &doc, AsyncWebSocketClient * client)
-{
-    size_t len = measureJsonPretty(doc);
-    AsyncWebSocketMessageBuffer *buffer = this->webSocket->makeBuffer(len); //  creates a buffer (len + 1) for you.
-    if (buffer)
-    {
-        //root.printTo((char *)buffer->get(), len + 1);
-        serializeJsonPretty(doc, (char *)buffer->get(), len + 1);
-        //String response = String();
-        //serializeJson(*doc, response);
-
-        //this->ws_send_to_all_client(buffer);
-        this->send(buffer, client);
-
-        //response = String();
-    }
-}*/
 // ---------------------------------------------------------------
 // convert to json with name of the request and result value
 void TBD_WiFi_Portail_WebSocket::sendStringResultOf(const String &resultOfName, const String &result, AsyncWebSocketClient * client)
@@ -374,42 +356,7 @@ void TBD_WiFi_Portail_WebSocket::sendJsonResultOf(const String &resultOfName, co
     this->send(doc, client);
 }
 //-----------------------------------------------------------------------
-/*
-void TBD_WiFi_Portail_WebSocket::sendJsonByWebsocket2(DynamicJsonDocument doc)
-{
-    size_t len = measureJsonPretty(doc);
-    AsyncWebSocketMessageBuffer *buffer = this->webSocket->makeBuffer(len); //  creates a buffer (len + 1) for you.
-    if (buffer)
-    {
-        //root.printTo((char *)buffer->get(), len + 1);
-        serializeJsonPretty(doc, (char *)buffer->get(), len + 1);
-        //String response = String();
-        //serializeJson(*doc, response);
 
-        this->ws_send_to_all_client(buffer);
-        //response = String();
-    }
-}*/
-/*
-// -------------------------------------------------------------------------
-void TBD_WiFi_Portail_WebSocket::ws_send_to_client(uint32_t client_id, String message)
-{
-    this->_serialDebug->println(message);
-    if (this->webSocket->enabled())
-        this->webSocket->text(client_id, message); // send data to client
-}
-
-void TBD_WiFi_Portail_WebSocket::ws_send_to_all_client(String message)
-{
-    if (this->webSocket->enabled())
-        this->webSocket->textAll(message); // send data to all client
-}
-void TBD_WiFi_Portail_WebSocket::ws_send_to_all_client(AsyncWebSocketMessageBuffer *buffer)
-{
-    if (this->webSocket->enabled())
-        this->webSocket->textAll(buffer); // send data to all client
-}
-*/
 /*
 // --------------------------------- envoi des informations au nouveau client ---------------------------------------
 void TBD_WiFi_Portail_WebSocket::envoieAllInfosNewClient(uint32_t client_id)
@@ -429,38 +376,6 @@ void TBD_WiFi_Portail_WebSocket::envoieValuesToClient(uint32_t client_id)
     // ws_send_to_client(client_id, handleInfos().c_str()); // send data to client
 }
 */
-
-/*
-void updateObject(JsonObject oldObject, JsonObject newObject) {
-    for (JsonPair kv : newObject)
-        updateVariant(oldObject[kv.key().c_str()], kv.value());
-}
-
-void updateArray(JsonArray oldArray, JsonArray newArray) {
-    int index = 0;
-    for (auto value : newArray) {
-        updateVariant(oldArray[index], newArray[index]);
-        index++;
-    }
-}
-
-void updateVariant(JsonVariant oldVariant, JsonVariant newVariant) {
-    if (newVariant.is<JsonObject>())
-        updateObject(oldVariant, newVariant);
-    else if (newVariant.is<JsonArray>())
-        updateArray(oldVariant, newVariant);
-    else
-        oldVariant.set(newVariant);
-}
-void merge(JsonObject dest, JsonObjectConst src)
-{
-    for (auto kvp : src)
-    {
-        dest[kvp.key()] = kvp.value();
-    }
-}*/
-
-// ---------------------------------------------------------------
 
 
 //--------------------------------------------- Status --------------------------------------------------
@@ -482,17 +397,12 @@ void TBD_WiFi_Portail_WebSocket::handleCommandScan(AsyncWebSocketClient * client
     this->_serialDebug->println(F("getScan"));
     if (this->_webServer != nullptr)
     {
-        //WiFi.scanNetworksAsync(std::bind(&TBD_WiFi_Portail_WebServer::this->_webServer->handleScanResult, this,std::placeholders::_1), true); // first param :  the event handler executed when the scan is done
-        /*WiFi.scanNetworksAsync([&](int networksFound)
-                               { this->_webServer->handleScanResult(networksFound); },
-                               true);*/
         WiFi.scanNetworksAsync(
             [&](int networksFound) {
                 if (this->_webServer != nullptr)
                     this->sendJsonResultOf(F("ssidlist"),this->_webServer->handleScanResult(networksFound));
             },
             true);    // second param : set it to true to scan for hidden networks
-
     }
     else
     {

@@ -163,7 +163,7 @@ void TBD_WiFi_Portail_Wifi::fallbacktoAPMode()
 
 // WiFi.config(clientip, gateway, subnet, dns);
 // Try to connect Wi-Fi
-bool TBD_WiFi_Portail_Wifi::connectSTA(AFArray<STA> *allSTA, String hostname, uint32_t connectionTimeoutMUltiWifi)
+bool TBD_WiFi_Portail_Wifi::connectSTA(std::vector<STA> *allSTA, String hostname, uint32_t connectionTimeoutMUltiWifi)
 {
     this->_serialDebug->println(F("[ INFO ] Trying to connect WiFi: "));
 
@@ -197,9 +197,8 @@ bool TBD_WiFi_Portail_Wifi::connectSTA(AFArray<STA> *allSTA, String hostname, ui
         WiFi.hostname(hostname);
 
     // Register multi WiFi networks
-    while (allSTA->has_next())
+    for (STA& oneSTA : *allSTA)
     {
-        STA oneSTA = allSTA->next();
         this->_wifiMulti.addAP(oneSTA.getSSID().c_str(), oneSTA.getPassword().c_str());
         bool added = _wifiMulti.existsAP(oneSTA.getSSID().c_str(), oneSTA.getPassword().c_str());
         this->_serialDebug->print(F("[ INFO ] '"));
