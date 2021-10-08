@@ -18,14 +18,15 @@
 #include <ESPAsyncTCP.h>       // https://github.com/me-no-dev/ESPAsyncTCP
 #include <ESPAsyncWebServer.h> // https://github.com/me-no-dev/ESPAsyncWebServer
 
-#include <list>
+//#include <list>
+#include <vector>
 #include <ArduinoJson.h>
 #include <AFArray.h>
 
 // empty function
-static void handleNULLWebSocket(int numClient = -1, String value = "") {}
+static void handleNULLWebSocket(AsyncWebSocketClient * client = nullptr, String value = "") {}
 
-typedef std::function<void(int numClient, String value)> HandlerFunctionWebSocket; //unknow number of params
+typedef std::function<void(AsyncWebSocketClient * client, String value)> HandlerFunctionWebSocket; //unknow number of params
 
 // class Path, Method and OnCommand
 class PathMethodOnRequestWebSocket
@@ -40,8 +41,8 @@ public:
     ~PathMethodOnRequestWebSocket() {}
 
     // surcharge operator
-    void operator()(int numClient = -1, String value = "") { return onCommand(numClient, value); } // can be called like : pathMethodOnRequestWebSocket(0, "")
-    void operator()(String value = "") { return onCommand(-1, value); }                            // can be called like : pathMethodOnRequestWebSocket("")
+    void operator()(AsyncWebSocketClient * client = nullptr, String value = "") { return onCommand(client, value); } // can be called like : pathMethodOnRequestWebSocket(0, "")
+    void operator()(String value = "") { return onCommand(nullptr, value); }                            // can be called like : pathMethodOnRequestWebSocket("")
 };
 
 class TBD_WiFi_Portail_WebSocket
@@ -59,27 +60,30 @@ public:
     void begin();
     void loop();
 
-    void handleReceivedMessage(const String &message, uint32_t numClient);
+    void handleReceivedMessage(const String &message, AsyncWebSocketClient * client);
     void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
 
     void close_WebSocket();
-    void sendJsonByWebsocket(const JsonDocument &doc);
+    /*void sendJsonByWebsocket(const JsonDocument &doc, AsyncWebSocketClient * client = nullptr);
     void sendJsonByWebsocket2(DynamicJsonDocument doc);
     //void sendDataWs(AsyncWebSocketClient * client);
-    void ws_send_to_client(uint32_t client_id, String message);
+    void ws_send_to_client(AsyncWebSocketClient * client, String message);
     void ws_send_to_all_client(String message);
     void ws_send_to_all_client(AsyncWebSocketMessageBuffer *buffer);
-    void envoieAllInfosNewClient(uint32_t client_id);
-    void envoieHardwareInfosToClient(uint32_t client_id);
-    void envoieValuesToClient(uint32_t client_id);
+    void envoieAllInfosNewClient(AsyncWebSocketClient * client);
+    void envoieHardwareInfosToClient(AsyncWebSocketClient * client);
+    void envoieValuesToClient(AsyncWebSocketClient * client);*/
 
-    void sendStringResultOf(const String &resultOf, const String &result);
-    void sendJsonResultOf(const String &resultOf, const DynamicJsonDocument &result);
 
-    void handleCommandScan(int numClient = -1, String value = "");
-    void handleCommandStatus(int numClient = -1, String value = "");
-    void handleCommandRealTime(int numClient = -1, String value = "");
-    void handleCommandNetwork(int numClient = -1, String value = "");
+    void send(const JsonDocument &doc, AsyncWebSocketClient * client = nullptr);
+    void send(const String &data, AsyncWebSocketClient * client = nullptr);
+    void sendStringResultOf(const String &resultOfName, const String &result, AsyncWebSocketClient * client = nullptr);
+    void sendJsonResultOf(const String &resultOfName, const DynamicJsonDocument &result, AsyncWebSocketClient * client = nullptr);
+
+    void handleCommandScan(AsyncWebSocketClient * client = nullptr, String value = "");
+    void handleCommandStatus(AsyncWebSocketClient * client = nullptr, String value = "");
+    void handleCommandRealTime(AsyncWebSocketClient * client = nullptr, String value = "");
+    void handleCommandNetwork(AsyncWebSocketClient * client = nullptr, String value = "");
 
     AsyncWebSocket *webSocket;
 

@@ -148,7 +148,7 @@ TBD_WiFi_Portail_ESP::~TBD_WiFi_Portail_ESP(){
 }
 
 /// Add NTP class
-void TBD_WiFi_Portail_ESP::addNTP(TBD_WiFi_Portail_NTP& ntp){
+void TBD_WiFi_Portail_ESP::addNTP(Service& ntp){
     this->_ntp = &ntp;
 }
 
@@ -241,12 +241,37 @@ DynamicJsonDocument TBD_WiFi_Portail_ESP::getHardwareInfosJson2() {
     return docHardwareInfos;
 }
 
+DynamicJsonDocument TBD_WiFi_Portail_ESP::getHardwareInfosJsonObj() {
+    DynamicJsonDocument doc(
+            JSON_OBJECT_SIZE(2)
+            + JSON_ARRAY_SIZE((this->_deviceStatus->size()+1)) + (this->_deviceStatus->size()+1)*(JSON_OBJECT_SIZE(4))
+            + JSON_ARRAY_SIZE((this->_networkStatus->size()+1)) + (this->_networkStatus->size()+1)*(JSON_OBJECT_SIZE(4))
+    );
+
+    doc[F("softVersion")] = WIFI_PORTAIL_VERSION;
+    JsonObject statusInfos = doc.createNestedObject(F("statusInfos"));
+    JsonArray deviceInfos = statusInfos.createNestedArray(F("device"));
+    while (this->_deviceStatus->has_next()) {
+        String name = this->_deviceStatus->next();
+        sNameValue info = this->getInfoData2(name);
+        deviceInfos.add(serialized(info.ToSting()));
+    }
+    JsonArray networkInfos = statusInfos.createNestedArray(F("network"));
+    while (this->_networkStatus->has_next()) {
+        String name = this->_networkStatus->next();
+        sNameValue info = this->getInfoData2(name);
+        networkInfos.add(serialized(info.ToSting()));
+    }
+
+    return doc;
+}
+
 /// Convert all infos to JSON and then to string
 String TBD_WiFi_Portail_ESP::getHardwareInfosString2() {
     String jsonStringHardwareInfos;
     jsonStringHardwareInfos.reserve(2000);
     serializeJsonPretty(this->getHardwareInfosJson2(), jsonStringHardwareInfos); // on remplie la string avec les infos de JSONInfo sous forme sérialisé
-    //Serial.println(jsonStringHardwareInfos);
+    Serial.println(jsonStringHardwareInfos);
     return jsonStringHardwareInfos;
 }
 
@@ -257,9 +282,8 @@ sNameValue TBD_WiFi_Portail_ESP::getInfoData2(const String& id) {
     if (id == F("uptime")) {
         info.name = F("Uptime");
 #ifdef USE_NTP
-        if (this->_ntp != nullptr) info.value = this->_ntp->getUptimeString();
-        else {
-#endif // USE_NTP
+        if (this->_ntp != nullptr) info.value = this->_ntp->toString2();
+#else // USE_NTP
             unsigned long millisecs = millis();
             info.value = (String)((millisecs / (1000 * 60 * 60 * 24)) % 365);
             info.value += F(" Days ");
@@ -269,8 +293,6 @@ sNameValue TBD_WiFi_Portail_ESP::getInfoData2(const String& id) {
             info.value += F(" Mins ");
             info.value += (String)((millisecs / 1000) % 60);
             info.value += F(" Secs");
-#ifdef USE_NTP
-        }
 #endif // USE_NTP
     } else if (id == F("chipid")) {
         info.name = F("Chip ID");

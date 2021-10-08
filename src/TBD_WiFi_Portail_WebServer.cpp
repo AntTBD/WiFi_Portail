@@ -325,11 +325,18 @@ void TBD_WiFi_Portail_WebServer::handleScanWifi(AsyncWebServerRequest *request)
     //First request will return 0 results unless you start scan from somewhere else (loop/setup)
     //Do not request more often than 3-5 seconds
     //https://arduino-esp8266.readthedocs.io/en/latest/esp8266wifi/scan-class.html#scannetworksasync
-    WiFi.scanNetworksAsync(std::bind(&TBD_WiFi_Portail_WebServer::handleScanResult, this, std::placeholders::_1), true); // first param :  the event handler executed when the scan is done
+    //WiFi.scanNetworksAsync(std::bind(&TBD_WiFi_Portail_WebServer::handleScanResult, this, std::placeholders::_1), true); // first param :  the event handler executed when the scan is done
     // second param : set it to true to scan for hidden networks
+
     request->send(200, F("text/plain"), F("Response will be sended by WebSocket"));
+    WiFi.scanNetworksAsync(
+            [&](int networksFound) {
+                if (this->_webSocket != nullptr)
+                    this->_webSocket->sendJsonResultOf(F("ssidlist"),this->handleScanResult(networksFound));
+                },
+                true);
 }
-void TBD_WiFi_Portail_WebServer::handleScanResult(int networksFound)
+DynamicJsonDocument TBD_WiFi_Portail_WebServer::handleScanResult(int networksFound)
 {
     // sort by RSSI
     int n = networksFound;
@@ -350,10 +357,8 @@ void TBD_WiFi_Portail_WebServer::handleScanResult(int networksFound)
             }
         }
     }
-    DynamicJsonDocument doc(JSON_ARRAY_SIZE(networksFound) + JSON_OBJECT_SIZE(2) + networksFound * JSON_OBJECT_SIZE(6));
-    doc[F("resultof")] = F("ssidlist");
-    JsonObject value = doc.createNestedObject(F("value"));
-    JsonArray scan = value.createNestedArray(F("list"));
+    DynamicJsonDocument doc(JSON_ARRAY_SIZE(networksFound) +  networksFound * JSON_OBJECT_SIZE(6));
+    JsonArray scan = doc.createNestedArray(F("list"));
     for (int i = 0; i < 5 && i < networksFound; ++i)
     {
         JsonObject item = scan.createNestedObject();
@@ -365,10 +370,12 @@ void TBD_WiFi_Portail_WebServer::handleScanResult(int networksFound)
         item[F("hidden")] = WiFi.isHidden(indices[i]) ? true : false;
     }
 
-    if (this->_webSocket != nullptr)
-        this->_webSocket->sendJsonByWebsocket(doc);
+    //if (this->_webSocket != nullptr)
+    //    this->_webSocket->sendJsonResultOf(F("ssidlist"),doc);
 
     WiFi.scanDelete();
+
+    return doc;
 }
 
 void TBD_WiFi_Portail_WebServer::handleGetRealTime(AsyncWebServerRequest *request)
@@ -377,21 +384,9 @@ void TBD_WiFi_Portail_WebServer::handleGetRealTime(AsyncWebServerRequest *reques
     if (this->_ntp != nullptr)
     {
         request->send(200, F("text/plain"), F("Response will be sended by WebSocket"));
-        //this->_ntp->getTimeDateString();
-        //if(this->_webSocket != nullptr) this->_webSocket->sendJsonByWebsocket2(this->_ntp->getRealTimeJson());
 
-        DynamicJsonDocument jsonObject = this->_ntp->toObj();
-        if (jsonObject["day"].as<int>() != 0)
-        {
-            this->_serialDebug->println("That's working!");
-        }
-        else
-        {
-            this->_serialDebug->println("That's not working!");
-        }
-        //serializeJsonPretty(jsonObject, Serial);
         if (this->_webSocket != nullptr)
-            this->_webSocket->sendJsonResultOf("getRealTime", jsonObject);
+            this->_webSocket->sendJsonResultOf(F("getRealTime"), this->_ntp->toObj());
     }
     else
     {
@@ -407,9 +402,9 @@ void TBD_WiFi_Portail_WebServer::handleGetUptime(AsyncWebServerRequest *request)
     if (this->_ntp != nullptr)
     {
         request->send(200, F("text/plain"), F("Response will be sended by WebSocket"));
-        //this->_ntp->sendUptimeByWebSocket();
+
         if (this->_webSocket != nullptr)
-            this->_webSocket->sendJsonByWebsocket2(this->_ntp->toJson2());
+            this->_webSocket->sendStringResultOf(F("getUptime"), this->_ntp->toString2());
     }
     else
     {
@@ -425,9 +420,9 @@ void TBD_WiFi_Portail_WebServer::handleGetESPInfos(AsyncWebServerRequest *reques
     if (this->_espInfos != nullptr)
     {
         request->send(200, F("text/plain"), F("Response will be sended by WebSocket"));
-        //this->_espInfos->sendHardwareInfosByWebSocket();
+
         if (this->_webSocket != nullptr)
-            this->_webSocket->sendJsonByWebsocket2(this->_espInfos->toJson());
+            this->_webSocket->sendJsonResultOf(F("getStatus"), this->_espInfos->toObj());
     }
     else
     {

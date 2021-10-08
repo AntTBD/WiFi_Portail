@@ -5,32 +5,22 @@
 #ifndef SERVICE_H
 #define SERVICE_H
 
-#include "TBD_WiFi_Portail_SerialDebug.h"
+#include <Arduino.h>
+
 #include <ArduinoJson.h>
 
 class Service {
-protected:
-    TBD_WiFi_Portail_SerialDebug *_serialDebug;
-
 public:
-    Service() { this->_serialDebug = nullptr; };
+    ~Service(){};
 
-    Service(TBD_WiFi_Portail_SerialDebug &serialDebug) { this->_serialDebug = &serialDebug; };
+    virtual DynamicJsonDocument toJson() { };
+    virtual DynamicJsonDocument toJson2() { };
 
-    ~Service() { delete this->_serialDebug; };
+    virtual DynamicJsonDocument toObj() { };
 
-    void begin();
+    virtual String toString() { return F("**Service.toString()**"); };
+    virtual String toString2() { return F("**Service.toString2()**"); };
 
-    void loop();
-
-    DynamicJsonDocument toJson() { };
-    DynamicJsonDocument toJson2() { };
-
-    DynamicJsonDocument toObj() { };
-
-    String toString() { };
-
-    void updateValues();
 };
 
 

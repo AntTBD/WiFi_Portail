@@ -11,9 +11,8 @@
 #ifdef USE_NTP
 #include "Service.h"
 
-//#include "TBD_WiFi_Portail_SerialDebug.h"
+#include "TBD_WiFi_Portail_SerialDebug.h"
 //#include "TBD_WiFi_Portail_WebSocket.h"
-//#include <ArduinoJson.h>
 
 // from https://github.com/gmag11/NtpClient/blob/master/examples/NTPClientBasic/NTPClientBasic.ino
 #include <ESPAsyncUDP.h>
@@ -91,15 +90,16 @@ public:
 
 
 
-    DynamicJsonDocument toJson() { return this->getRealTimeJson(); };
-    DynamicJsonDocument toJson2() { return this->getUptimeJson(); };
+    DynamicJsonDocument toJson() override { return this->getRealTimeJson(); };
+    DynamicJsonDocument toJson2() override { return this->getUptimeJson(); };
 
-    DynamicJsonDocument toObj() { return this->getRealTimeJsonObj(); };
+    DynamicJsonDocument toObj() override { return this->getRealTimeJsonObj(); };
 
-    String toString() { return this->getRealTimeString(); };
+    String toString() override { return this->getRealTimeString(); };
+    String toString2() override { return this->getUptimeString(); };
 
 private:
-    //TBD_WiFi_Portail_SerialDebug *_serialDebug;
+    TBD_WiFi_Portail_SerialDebug *_serialDebug;
     //TBD_WiFi_Portail_WebSocket* _webSocket;
 
     boolean _syncEventTriggered = false; // True if a time even has been triggered

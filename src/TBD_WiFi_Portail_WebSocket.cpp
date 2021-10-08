@@ -72,26 +72,26 @@ void TBD_WiFi_Portail_WebSocket::begin()
             "status",
             "getStatus",
             //std::bind(&TBD_WiFi_Portail_WebSocket::handleCommandStatus, this,std::placeholders::_2)
-            [&](int numClient, String value)
-            { this->handleCommandStatus(numClient, value); });
+            [&](AsyncWebSocketClient *client, String value)
+            { this->handleCommandStatus(client, value); });
         this->addCommand(
             "scan",
             "getScan",
             //std::bind(&TBD_WiFi_Portail_WebSocket::handleCommandScan, this,std::placeholders::_2)
-            [&](int numClient, String value)
-            { this->handleCommandScan(numClient, value); });
+            [&](AsyncWebSocketClient *client, String value)
+            { this->handleCommandScan(client, value); });
         this->addCommand(
             "realTime",
             "getRealTime",
             //std::bind(&TBD_WiFi_Portail_WebSocket::handleCommandRealTime, this,std::placeholders::_2)
-            [&](int numClient, String value)
-            { this->handleCommandRealTime(numClient, value); });
+            [&](AsyncWebSocketClient *client, String value)
+            { this->handleCommandRealTime(client, value); });
         this->addCommand(
             "network",
             "getNetwork",
             //std::bind(&TBD_WiFi_Portail_WebSocket::handleCommandNetwork, this,std::placeholders::_2)
-            [&](int numClient, String value)
-            { this->handleCommandNetwork(numClient, value); });
+            [&](AsyncWebSocketClient *client, String value)
+            { this->handleCommandNetwork(client, value); });
 
         this->_serialDebug->print(F("commands: (nbr="));
         this->_serialDebug->print(this->_allCommand->size());
@@ -117,16 +117,6 @@ void TBD_WiFi_Portail_WebSocket::loop()
     // Limiting the number of web socket clients
     // https://github.com/me-no-dev/ESPAsyncWebServer#limiting-the-number-of-web-socket-clients
     this->webSocket->cleanupClients();
-    ///
-    /*
-    // check if could send time from ntp
-    if (this->_ntp != nullptr) {
-        if (this->_ntp->couldSendTime()){
-            //this->sendStringResultOf("getRealTime", this->_ntp->getTimeDateString());
-            this->ws_send_to_all_client(this->_ntp->getRealTimeString());// {"resultof":"getRealTime","value":{"day":28,"month":6,"year":2021,"hour":0,"min":21,"sec":49}}
-            this->_ntp->stopSendTime();
-        }
-    }*/
 }
 
 // ----------------------------------------- When a WebSocket message is received renvoi du bon type de syntaxe --------------------------------
@@ -138,7 +128,7 @@ void TBD_WiFi_Portail_WebSocket::onWsEvent(AsyncWebSocket *server, AsyncWebSocke
         client->printf("Hello Client %u :)", client->id());
         //client->ping();
 
-        this->envoieAllInfosNewClient(client->id()); //TBD
+        //this->envoieAllInfosNewClient(client->id()); // TODO : TBD
     }
     else if (type == WS_EVT_DISCONNECT)
     {
@@ -191,7 +181,7 @@ void TBD_WiFi_Portail_WebSocket::onWsEvent(AsyncWebSocket *server, AsyncWebSocke
             }
             else
             {
-                this->handleReceivedMessage(msg.c_str(), client->id());
+                this->handleReceivedMessage(msg.c_str(), client);
                 this->_serialDebug->println(F("=== Traitement WebSocket TERMINE ! ==="));
             }
             //fin TBD
@@ -248,7 +238,7 @@ void TBD_WiFi_Portail_WebSocket::onWsEvent(AsyncWebSocket *server, AsyncWebSocke
 }
 
 // ------------------------------------- analyse la demande et renvoi les bonnes infos -------------------------------
-void TBD_WiFi_Portail_WebSocket::handleReceivedMessage(const String &message, uint32_t numClient)
+void TBD_WiFi_Portail_WebSocket::handleReceivedMessage(const String &message, AsyncWebSocketClient * client)
 {
     this->_serialDebug->println(F("handleReceivedMessage"));           //TBD
     DynamicJsonDocument JSONBuffer(JSON_OBJECT_SIZE(2) + 200);         // Memory pool
@@ -270,7 +260,7 @@ void TBD_WiFi_Portail_WebSocket::handleReceivedMessage(const String &message, ui
 
     bool commandFound = false;
     // check if command was recognized and exist in list
-    while (this->_allCommand->has_next() && commandFound == false)
+    /*while (this->_allCommand->has_next()) //&& commandFound == false)
     {
         PathMethodOnRequestWebSocket pathMethodOnRequestWebSocketTemp = this->_allCommand->next();
         if (command == pathMethodOnRequestWebSocketTemp.commandNameIn)
@@ -283,8 +273,8 @@ void TBD_WiFi_Portail_WebSocket::handleReceivedMessage(const String &message, ui
 
     if (!commandFound)
     {
-        this->_serialDebug->println(F("Command not recognized"));
-        this->ws_send_to_client(numClient, F("Command not regognized"));
+        this->_serialDebug->println((String)F("Command not recognized ")+command);
+        this->send((String)F("Command not regognized ")+command, client);
     }
 }
 
@@ -304,7 +294,40 @@ void TBD_WiFi_Portail_WebSocket::close_WebSocket()
 
 //-----------------------------------------------------------------------
 
-void TBD_WiFi_Portail_WebSocket::sendJsonByWebsocket(const JsonDocument &doc)
+// send json to one client if defined else to all clients
+void TBD_WiFi_Portail_WebSocket::send(const JsonDocument &doc, AsyncWebSocketClient * client)
+{
+    if (this->webSocket->enabled()) {
+
+        size_t len = measureJsonPretty(doc);
+        AsyncWebSocketMessageBuffer *buffer = this->webSocket->makeBuffer(len); //  creates a buffer (len + 1) for you.
+
+        if (buffer) {
+            serializeJsonPretty(doc, (char *) buffer->get(), len + 1);
+
+            this->_serialDebug->println("send json: " +String((char *) buffer->get()) + "\nsize: "+len);
+            if (client != nullptr) {
+                client->text(buffer); // send data to one client
+            } else {
+                this->webSocket->textAll(buffer);// send data to all client
+            }
+        }
+    }
+}
+// send string to one client if defined else to all clients
+void TBD_WiFi_Portail_WebSocket::send(const String &data, AsyncWebSocketClient * client)
+{
+    if (this->webSocket->enabled() /*&& buffer == ""*/) {
+        if (client != nullptr) {
+            client->text(data); // send data to one client
+        } else {
+            this->webSocket->textAll(data);// send data to all client
+        }
+    }
+}
+//-----------------------------------------------------------------------
+/*
+void TBD_WiFi_Portail_WebSocket::sendJson(const JsonDocument &doc, AsyncWebSocketClient * client)
 {
     size_t len = measureJsonPretty(doc);
     AsyncWebSocketMessageBuffer *buffer = this->webSocket->makeBuffer(len); //  creates a buffer (len + 1) for you.
@@ -315,13 +338,43 @@ void TBD_WiFi_Portail_WebSocket::sendJsonByWebsocket(const JsonDocument &doc)
         //String response = String();
         //serializeJson(*doc, response);
 
-        this->ws_send_to_all_client(buffer);
+        //this->ws_send_to_all_client(buffer);
+        this->send(buffer, client);
+
         //response = String();
     }
+}*/
+// ---------------------------------------------------------------
+// convert to json with name of the request and result value
+void TBD_WiFi_Portail_WebSocket::sendStringResultOf(const String &resultOfName, const String &result, AsyncWebSocketClient * client)
+{
+    //this->_serialDebug->println("sendStringResultOf: " +result + "\nsize: "+strlen(result.c_str()));
+    DynamicJsonDocument doc(JSON_OBJECT_SIZE(2) + strlen(result.c_str())+10);
+    doc[F("resultof")] = resultOfName;
+    doc[F("value")] = result.c_str();
+
+    //serializeJsonPretty(doc, Serial);
+
+    this->send(doc, client);
 }
 
-//-----------------------------------------------------------------------
+void TBD_WiFi_Portail_WebSocket::sendJsonResultOf(const String &resultOfName, const DynamicJsonDocument &result, AsyncWebSocketClient * client)
+{
+    //this->_serialDebug->println(F("sendJsonResultOf"));
+    //this->_serialDebug->println(result.memoryUsage());
+    //this->_serialDebug->println(measureJsonPretty(result));
+    //serializeJsonPretty(result, Serial);
 
+    DynamicJsonDocument doc(JSON_OBJECT_SIZE(2) + result.memoryUsage() + 100);
+    doc[F("resultof")] = resultOfName;
+    doc[F("value")] = result.as<JsonObjectConst>();
+
+    //serializeJsonPretty(doc, Serial);
+
+    this->send(doc, client);
+}
+//-----------------------------------------------------------------------
+/*
 void TBD_WiFi_Portail_WebSocket::sendJsonByWebsocket2(DynamicJsonDocument doc)
 {
     size_t len = measureJsonPretty(doc);
@@ -336,28 +389,8 @@ void TBD_WiFi_Portail_WebSocket::sendJsonByWebsocket2(DynamicJsonDocument doc)
         this->ws_send_to_all_client(buffer);
         //response = String();
     }
-}
-/*void TBD_WiFi_Portail_WebSocket::sendDataWs(AsyncWebSocketClient * client)
-{
-    DynamicJsonBuffer jsonBuffer;
-    JsonObject& root = jsonBuffer.createObject();
-    root["a"] = "abc";
-    root["b"] = "abcd";
-    root["c"] = "abcde";
-    root["d"] = "abcdef";
-    root["e"] = "abcdefg";
-    size_t len = root.measureLength();
-    AsyncWebSocketMessageBuffer * buffer = this->webSocket->makeBuffer(len); //  creates a buffer (len + 1) for you.
-    if (buffer) {
-        root.printTo((char *)buffer->get(), len + 1);
-        if (client) {
-            client->text(buffer);
-        } else {
-            this->webSocket->textAll(buffer);
-        }
-    }
 }*/
-
+/*
 // -------------------------------------------------------------------------
 void TBD_WiFi_Portail_WebSocket::ws_send_to_client(uint32_t client_id, String message)
 {
@@ -376,7 +409,8 @@ void TBD_WiFi_Portail_WebSocket::ws_send_to_all_client(AsyncWebSocketMessageBuff
     if (this->webSocket->enabled())
         this->webSocket->textAll(buffer); // send data to all client
 }
-
+*/
+/*
 // --------------------------------- envoi des informations au nouveau client ---------------------------------------
 void TBD_WiFi_Portail_WebSocket::envoieAllInfosNewClient(uint32_t client_id)
 {
@@ -394,16 +428,8 @@ void TBD_WiFi_Portail_WebSocket::envoieValuesToClient(uint32_t client_id)
 {
     // ws_send_to_client(client_id, handleInfos().c_str()); // send data to client
 }
+*/
 
-// ---------------------------------------------------------------
-void TBD_WiFi_Portail_WebSocket::sendStringResultOf(const String &resultOf, const String &result)
-{
-    DynamicJsonDocument doc(JSON_OBJECT_SIZE(2) + strlen(result.c_str()));
-    doc[F("resultof")] = resultOf;
-    doc[F("value")] = result;
-
-    sendJsonByWebsocket(doc);
-}
 /*
 void updateObject(JsonObject oldObject, JsonObject newObject) {
     for (JsonPair kv : newObject)
@@ -435,84 +461,71 @@ void merge(JsonObject dest, JsonObjectConst src)
 }*/
 
 // ---------------------------------------------------------------
-void TBD_WiFi_Portail_WebSocket::sendJsonResultOf(const String &resultOf, const DynamicJsonDocument &result)
-{
-    //this->_serialDebug->println(F("sendJsonResultOf"));
-    //this->_serialDebug->println(result.memoryUsage());
-    //this->_serialDebug->println(measureJsonPretty(result));
 
-    DynamicJsonDocument doc(JSON_OBJECT_SIZE(2) + measureJsonPretty(result) + 100);
-    doc[F("resultof")] = resultOf;
-    doc[F("value")] = result.as<JsonObjectConst>();
-
-    //serializeJsonPretty(doc, Serial);
-
-    sendJsonByWebsocket(doc);
-}
 
 //--------------------------------------------- Status --------------------------------------------------
-void TBD_WiFi_Portail_WebSocket::handleCommandStatus(int numClient, String value)
+void TBD_WiFi_Portail_WebSocket::handleCommandStatus(AsyncWebSocketClient * client, String value)
 {
     this->_serialDebug->println(F("get status"));
     if (this->_espInfos != nullptr)
     {
-        //this->_espInfos->sendHardwareInfosByWebSocket();
-        this->ws_send_to_client(numClient, this->_espInfos->toString());
+        this->sendJsonResultOf(F("getStatus"), this->_espInfos->toObj(), client);
     }
     else
     {
-        this->ws_send_to_client(numClient, F("ESP Infos not added to WebSocket !"));
+        this->send(F("ESP Infos not added to WebSocket !"), client);
     }
 }
 //--------------------------------------------- Scan --------------------------------------------------
-void TBD_WiFi_Portail_WebSocket::handleCommandScan(int numClient, String value)
+void TBD_WiFi_Portail_WebSocket::handleCommandScan(AsyncWebSocketClient * client, String value)
 {
     this->_serialDebug->println(F("getScan"));
     if (this->_webServer != nullptr)
     {
         //WiFi.scanNetworksAsync(std::bind(&TBD_WiFi_Portail_WebServer::this->_webServer->handleScanResult, this,std::placeholders::_1), true); // first param :  the event handler executed when the scan is done
-        WiFi.scanNetworksAsync([&](int networksFound)
+        /*WiFi.scanNetworksAsync([&](int networksFound)
                                { this->_webServer->handleScanResult(networksFound); },
-                               true);
+                               true);*/
+        WiFi.scanNetworksAsync(
+            [&](int networksFound) {
+                if (this->_webServer != nullptr)
+                    this->sendJsonResultOf(F("ssidlist"),this->_webServer->handleScanResult(networksFound));
+            },
+            true);    // second param : set it to true to scan for hidden networks
+
     }
     else
     {
-        this->ws_send_to_client(numClient, F("WebServer not added to WebSocket !"));
+        this->send(F("WebServer not added to WebSocket !"), client);
     }
 }
 
 //--------------------------------------------- RealTime --------------------------------------------------
-void TBD_WiFi_Portail_WebSocket::handleCommandRealTime(int numClient, String value)
+void TBD_WiFi_Portail_WebSocket::handleCommandRealTime(AsyncWebSocketClient * client, String value)
 {
     this->_serialDebug->println(F("get realTime"));
 #ifdef USE_NTP
     if (this->_ntp != nullptr)
     {
-        this->sendJsonResultOf("getRealTime", this->_ntp->toObj());
-        ///            this->ws_send_to_all_client(this->_ntp->getRealTimeString());
-        //this->ws_send_to_client(numClient, this->_ntp->getRealTimeString());
-
-        //this->sendStringResultOf("getRealTime", this->_ntp->getTimeDateString());
-        //this->ws_send_to_client(numClient, this->_ntp->getTimeDateString());// {"resultof":"getRealTime","value":{"day":28,"month":6,"year":2021,"hour":0,"min":21,"sec":49}}
+        this->sendJsonResultOf(F("getRealTime"), this->_ntp->toObj()/*, client*/);// send to all client
     }
     else
     {
-        this->ws_send_to_client(numClient, F("NTP not added to WebSocket !"));
+        this->send(F("NTP not added to WebSocket !"), client);
     }
 #endif // USE_NTP
 }
 
 //--------------------------------------------- Network --------------------------------------------------
-void TBD_WiFi_Portail_WebSocket::handleCommandNetwork(int numClient, String value)
+void TBD_WiFi_Portail_WebSocket::handleCommandNetwork(AsyncWebSocketClient * client, String value)
 {
     this->_serialDebug->println(F("get network"));
     if (this->_webServer->_wifi != nullptr)
     {
-        this->sendJsonResultOf("getNetwork", this->_webServer->_wifi->getNetworkInfosJson());
-        //this->ws_send_to_all_client(this->_webServer->_wifi->getNetworkInfosString());
+        this->sendJsonResultOf(F("getNetwork"), this->_webServer->_wifi->getNetworkInfosJson(), client);
     }
     else
     {
-        this->ws_send_to_client(numClient, F("Wifi not added to WebSocket !"));
+        this->send(F("Wifi not added to WebSocket !"), client);
     }
 }

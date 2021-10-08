@@ -6,7 +6,7 @@
 
 #ifdef USE_NTP
 
-TBD_WiFi_Portail_NTP::TBD_WiFi_Portail_NTP(TBD_WiFi_Portail_SerialDebug &serialDebug, const String &ntpServerName) :Service(serialDebug)//: _serialDebug(&serialDebug)
+TBD_WiFi_Portail_NTP::TBD_WiFi_Portail_NTP(TBD_WiFi_Portail_SerialDebug &serialDebug, const String &ntpServerName) : _serialDebug(&serialDebug)
 {
     this->_ntpServerName = ntpServerName;
     // "pool.ntp.org";
@@ -27,7 +27,7 @@ TBD_WiFi_Portail_NTP::TBD_WiFi_Portail_NTP(TBD_WiFi_Portail_SerialDebug &serialD
 
 TBD_WiFi_Portail_NTP::~TBD_WiFi_Portail_NTP()
 {
-    //delete this->_serialDebug;
+    delete this->_serialDebug;
     //delete this->_webSocket;
     this->_ntp->stop();
     this->_couldSendTime = false;

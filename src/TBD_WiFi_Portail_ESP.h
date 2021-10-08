@@ -8,13 +8,11 @@
 #include <Arduino.h>
 #include "TBD_WiFi_Portail.h"
 #include "Service.h"
-#include "TBD_WiFi_Portail_NTP.h"
 #include "TBD_WiFi_Portail_FileSystem.h"
 #include <ESP8266WiFi.h>
 //#include "TBD_WiFi_Portail_WebSocket.h"
 
 #include <AFArray.h>
-//#include <ArduinoJson.h>
 
 typedef struct Progress
 {
@@ -113,20 +111,23 @@ class TBD_WiFi_Portail_ESP : public Service
 public:
     TBD_WiFi_Portail_ESP();
     ~TBD_WiFi_Portail_ESP();
-    void addNTP(TBD_WiFi_Portail_NTP &ntp);
+    void addNTP(Service &ntp);
     void addFileSystem(TBD_WiFi_Portail_FileSystem &fileSystem);
     //void addWebSocket(TBD_WiFi_Portail_WebSocket& webSocket);
 
     //DynamicJsonDocument getHardwareInfosJson();
     DynamicJsonDocument getHardwareInfosJson2();
+    DynamicJsonDocument getHardwareInfosJsonObj();
     //String getHardwareInfosString();
     String getHardwareInfosString2();
     //void sendHardwareInfosByWebSocket();
 
 
-    DynamicJsonDocument toJson() { return this->getHardwareInfosJson2(); };
+    DynamicJsonDocument toJson() override { return this->getHardwareInfosJson2(); };
 
-    String toString() { return this->getHardwareInfosString2(); };
+    DynamicJsonDocument toObj() override { return  this->getHardwareInfosJsonObj(); };
+
+    String toString() override { return this->getHardwareInfosString2(); };
 
 private:
     AFArray<String> *_infosName;
@@ -137,7 +138,7 @@ private:
 
     uint16_t nbInfos;
 
-    TBD_WiFi_Portail_NTP *_ntp;
+    Service *_ntp;
     TBD_WiFi_Portail_FileSystem *_fileSystem;
     //TBD_WiFi_Portail_WebSocket* _webSocket;
 

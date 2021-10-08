@@ -73,7 +73,7 @@ public:
     void handleResetWifi(AsyncWebServerRequest *request);
     void handleLoginConsole(AsyncWebServerRequest *request);
     void handleScanWifi(AsyncWebServerRequest *request);
-    void handleScanResult(int networksFound);
+    DynamicJsonDocument handleScanResult(int networksFound);
     void handleGetRealTime(AsyncWebServerRequest *request);
     void handleGetUptime(AsyncWebServerRequest *request);
     void handleGetESPInfos(AsyncWebServerRequest *request);
