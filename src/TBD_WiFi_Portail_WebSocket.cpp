@@ -169,6 +169,12 @@ void TBD_WiFi_Portail_WebSocket::onWsEvent(AsyncWebSocket *server, AsyncWebSocke
                     msg += buff;
                 }
             }
+
+            if (info->opcode == WS_TEXT)
+                client->text(F("(From server) I got your text message"));
+            else
+                client->binary(F("(From server) I got your binary message"));
+
             //this->_serialDebug->printf(F("%s\n"),msg.c_str());
             this->_serialDebug->println(msg);
 
@@ -188,10 +194,6 @@ void TBD_WiFi_Portail_WebSocket::onWsEvent(AsyncWebSocket *server, AsyncWebSocke
             }
             //fin TBD
 
-            if (info->opcode == WS_TEXT)
-                client->text(F("(From server) I got your text message"));
-            else
-                client->binary(F("(From server) I got your binary message"));
         }
         else
         {

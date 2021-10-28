@@ -112,6 +112,7 @@ bool TBD_WiFi_Portail_Wifi::startAP(AP *ap)
 
     if (this->wifiAll->getAP()->getSSID() != F(""))
     {
+        ap->setConnected(false);
 
         this->disableWifi();
         WiFi.enableAP(true);
@@ -130,7 +131,7 @@ bool TBD_WiFi_Portail_Wifi::startAP(AP *ap)
 
         // create Access Point
         this->_isWifiConnected = WiFi.softAP(ap->getSSID().c_str(), (ap->getPassword() == "" ? NULL : ap->getPassword().c_str()), (ap->isHide() ? 3 : 1), (ap->isHide() ? 1 : 0)); // 3rd param = channel : 3 when hide else default (1) / 4th param = hide or not
-
+        ap->setConnected(this->_isWifiConnected);
         this->_serialDebug->println(this->_isWifiConnected ? F("Ready") : F("Failed! => restarting..."));
         if (!this->_isWifiConnected)
         {
@@ -199,8 +200,9 @@ bool TBD_WiFi_Portail_Wifi::connectSTA(std::vector<STA> *allSTA, String hostname
     // Register multi WiFi networks
     for (STA& oneSTA : *allSTA)
     {
+        oneSTA.setConnected(false);
         this->_wifiMulti.addAP(oneSTA.getSSID().c_str(), oneSTA.getPassword().c_str());
-        bool added = _wifiMulti.existsAP(oneSTA.getSSID().c_str(), oneSTA.getPassword().c_str());
+        bool added = this->_wifiMulti.existsAP(oneSTA.getSSID().c_str(), oneSTA.getPassword().c_str());
         this->_serialDebug->print(F("[ INFO ] '"));
         this->_serialDebug->print(oneSTA.getSSID());
         this->_serialDebug->print(F("' "));
@@ -221,6 +223,10 @@ bool TBD_WiFi_Portail_Wifi::connectSTA(std::vector<STA> *allSTA, String hostname
     if (WiFi.status() == WL_CONNECTED)
     {
         this->_isWifiConnected = true;
+        for (STA& oneSTA : *allSTA) {
+            if(oneSTA.getSSID() == WiFi.SSID())
+                oneSTA.setConnected(true);
+        }
         //String data = ssid;
         //data += " " + WiFi.localIP().toString();
         //writeEvent("INFO", "wifi", "WiFi is connected", data);

@@ -36,6 +36,8 @@ public:
     void setMask(const String &_mask);
     int getAutoDisable() const;
     void setAutoDisable(int _autoDisable);
+    bool isConnected() const;
+    void setConnected(bool _connected);
 
     //toString
     //friend ostream &operator<<(ostream &os, const AP &ap);
@@ -49,6 +51,7 @@ private:
     String ip;
     String mask;
     int autoDisable;
+    bool connected;
 };
 
 class STA
@@ -79,6 +82,8 @@ public:
     void setGateway(const String &_gateway);
     int getAutoDisable() const;
     void setAutoDisable(int _autoDisable);
+    bool isConnected() const;
+    void setConnected(bool _connected);
 
     //toString
     //friend ostream &operator<<(ostream &os, const STA &sta);
@@ -94,6 +99,7 @@ private:
     String DNSServer;
     String gateway;
     int autoDisable;
+    bool connected;
 };
 
 class WifiAll
