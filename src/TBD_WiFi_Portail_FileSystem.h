@@ -8,6 +8,7 @@
 #include <Arduino.h>
 #include "TBD_WiFi_Portail.h"
 #include "TBD_WiFi_Portail_SerialDebug.h"
+#include <vector>
 
 // CHANGE TO LittleFS https://byfeel.info/esp8266-systeme-de-fichier-littlefs/
 
@@ -42,6 +43,47 @@
 #error Please select a filesystem first by uncommenting one of the "#define USE_xxx" lines at the beginning of the sketch.
 #endif
 
+struct _File{
+    String name;
+    float size;
+
+    String serialized() const {
+        return (String) F("{") + F("\"name\": \"") + name + F("\",") + F("\"size\":") + size + F("}");
+    }
+
+};
+struct _Directory {
+    String name;
+    uint32_t size;
+    std::vector<_File*> childrenFiles;
+    std::vector<_Directory*> childrenDirectories;
+
+    String serialized() const {
+        String result = (String) F("{") + F("\"name\": \"") + name + F("\",") + F("\"size\":") + size + F(",") + F("\"children\":[");
+        int i = 0;
+        for(_Directory* dir : childrenDirectories){
+            i++;
+            result += dir->serialized();
+            if (i != childrenDirectories.size()) {
+                result += (String) F(",");
+            }
+        }
+        result += (String) F("]") + F(",");
+        result += (String) F("\"files\":[");
+        int j = 0;
+        for(_File* file : childrenFiles){
+            j++;
+            result += file->serialized();
+            if (j != childrenFiles.size()) {
+                result += (String) F(",");
+            }
+        }
+        result += (String) F("]");
+        result += (String) F("}");
+        return result;
+    }
+};
+
 class TBD_WiFi_Portail_FileSystem
 {
 public:
@@ -50,10 +92,12 @@ public:
     bool begin();
 
     uint16_t getListOfAllFilesInMemory();
-    uint16_t listDir(const String &indent, const String &path);
+    uint16_t listDir(const String &indent, const String &path, _Directory* newDir);
     void infos_FileSytem();
     void filesytem_end();
     String formatBytes(size_t bytes) const;
+
+    String getFilesListJson() const;
 
 #if defined USE_SPIFFS
     FS *fileSystem;
@@ -69,6 +113,8 @@ public:
 private:
     bool _resetFileSystemAtStartup;
     TBD_WiFi_Portail_SerialDebug *_serialDebug;
+
+    std::vector<_Directory*> listOfFiles;
 };
 
 #endif //TBD_WIFI_PORTAIL_FILESYSTEM_H

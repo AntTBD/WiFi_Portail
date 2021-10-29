@@ -95,6 +95,12 @@ void TBD_WiFi_Portail_WebSocket::begin()
             //std::bind(&TBD_WiFi_Portail_WebSocket::handleCommandNetwork, this,std::placeholders::_2)
             [&](AsyncWebSocketClient *client, String value)
             { this->handleCommandNetwork(client, value); });
+        this->addCommand(
+                "files",
+                "getFiles",
+                //std::bind(&TBD_WiFi_Portail_WebSocket::handleCommandFiles, this,std::placeholders::_2)
+                [&](AsyncWebSocketClient *client, String value)
+                { this->handleCommandFiles(client, value); });
 
         this->_serialDebug->print(F("commands: (nbr="));
         this->_serialDebug->print(this->_allCommands->size());
@@ -439,5 +445,21 @@ void TBD_WiFi_Portail_WebSocket::handleCommandNetwork(AsyncWebSocketClient * cli
     else
     {
         this->send(F("Wifi not added to WebSocket !"), client);
+    }
+}
+//--------------------------------------------- Files --------------------------------------------------
+void TBD_WiFi_Portail_WebSocket::handleCommandFiles(AsyncWebSocketClient * client, String value)
+{
+    this->_serialDebug->println(F("get files"));
+    if (this->_webServer->_fileSystem != nullptr)
+    {
+        String temp = this->_webServer->_fileSystem->getFilesListJson();
+        DynamicJsonDocument docTemp(JSON_OBJECT_SIZE(1) + JSON_ARRAY_SIZE(1) + strlen(temp.c_str())*2+10);
+        deserializeJson(docTemp, temp);
+        this->sendJsonResultOf(F("getFiles"), docTemp, client);
+    }
+    else
+    {
+        this->send(F("FileSystem not added to WebSocket !"), client);
     }
 }

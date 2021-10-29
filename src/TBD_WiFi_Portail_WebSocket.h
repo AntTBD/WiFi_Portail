@@ -74,6 +74,7 @@ public:
     void handleCommandStatus(AsyncWebSocketClient * client = nullptr, String value = "");
     void handleCommandRealTime(AsyncWebSocketClient * client = nullptr, String value = "");
     void handleCommandNetwork(AsyncWebSocketClient * client = nullptr, String value = "");
+    void handleCommandFiles(AsyncWebSocketClient * client = nullptr, String value = "");
 
     AsyncWebSocket *webSocket;
 

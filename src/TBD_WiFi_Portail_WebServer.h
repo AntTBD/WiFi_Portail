@@ -81,10 +81,10 @@ public:
     AsyncWebServer *server;
 
     TBD_WiFi_Portail_Wifi *_wifi;
+    TBD_WiFi_Portail_FileSystem *_fileSystem;
 
 private:
     TBD_WiFi_Portail_SerialDebug *_serialDebug;
-    TBD_WiFi_Portail_FileSystem *_fileSystem;
     TBD_WiFi_Portail_WebEvents *_webEvents;
     TBD_WiFi_Portail_WebSocket *_webSocket;
     Service *_ntp;
