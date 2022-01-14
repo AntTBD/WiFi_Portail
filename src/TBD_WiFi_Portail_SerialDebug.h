@@ -14,63 +14,85 @@
 //Creating a printf() wrapper https://playground.arduino.cc/Main/Printf/
 #include <stdarg.h>
 
-class TBD_WiFi_Portail_SerialDebug
-{
-public:
-    //TBD_WiFi_Portail_SerialDebug();
-    //TBD_WiFi_Portail_SerialDebug(HardwareSerial* port = &Serial);
-    //TBD_WiFi_Portail_SerialDebug(HardwareSerial& port = Serial);
+namespace WiFi_Portail_API {
+    class SerialDebug {
+    public:
+        //SerialDebug();
+        //SerialDebug(HardwareSerial* port = &Serial);
+        //SerialDebug(HardwareSerial& port = Serial);
 
-    //TBD_WiFi_Portail_SerialDebug(HardwareSerial& port = Serial);
-    TBD_WiFi_Portail_SerialDebug(HardwareSerial &port = Serial, long baudRate = 115200, bool wifiDiagnostic = false);
+        //SerialDebug(HardwareSerial& port = Serial);
+        SerialDebug(HardwareSerial &port = Serial, long baudRate = 115200, bool wifiDiagnostic = false);
 
-    ~TBD_WiFi_Portail_SerialDebug();
+        ~SerialDebug();
 
-    bool begin();
-    void setDebug(bool debug);
-    bool getDebug() const;
+        bool begin();
 
-    size_t print(const __FlashStringHelper *);
-    size_t print(const String &);
-    //size_t print(String);
-    size_t print(const char *);
-    size_t print(char);
-    size_t print(unsigned char, int = DEC);
-    size_t print(int, int = DEC);
-    size_t print(unsigned int, int = DEC);
-    size_t print(long, int = DEC);
-    size_t print(unsigned long, int = DEC);
-    size_t print(double, int = 2);
+        void setDebug(bool debug);
 
-    size_t println(const __FlashStringHelper *);
-    size_t println(const String &);
-    //size_t println(String);
-    size_t println(const char *);
-    size_t println(char);
-    size_t println(unsigned char, int = DEC);
-    size_t println(int, int = DEC);
-    size_t println(unsigned int, int = DEC);
-    size_t println(long, int = DEC);
-    size_t println(unsigned long, int = DEC);
-    size_t println(double, int = 2);
-    size_t println(void);
+        bool getDebug() const;
 
-    //Creating a printf() wrapper https://playground.arduino.cc/Main/Printf/
-    size_t printf(const char *fmt, ...);
-    size_t printf(const __FlashStringHelper *fmt, ...);
+        size_t print(const __FlashStringHelper *);
 
-    HardwareSerial *getSerial();
+        size_t print(const String &);
 
-protected:
-    HardwareSerial *_stream;
+        //size_t print(String);
+        size_t print(const char *);
 
-private:
-    long _baudRate;
-    bool _wifiDiagnostic;
+        size_t print(char);
 
-    bool _debug;
-};
+        size_t print(unsigned char, int = DEC);
 
+        size_t print(int, int = DEC);
+
+        size_t print(unsigned int, int = DEC);
+
+        size_t print(long, int = DEC);
+
+        size_t print(unsigned long, int = DEC);
+
+        size_t print(double, int = 2);
+
+        size_t println(const __FlashStringHelper *);
+
+        size_t println(const String &);
+
+        //size_t println(String);
+        size_t println(const char *);
+
+        size_t println(char);
+
+        size_t println(unsigned char, int = DEC);
+
+        size_t println(int, int = DEC);
+
+        size_t println(unsigned int, int = DEC);
+
+        size_t println(long, int = DEC);
+
+        size_t println(unsigned long, int = DEC);
+
+        size_t println(double, int = 2);
+
+        size_t println(void);
+
+        //Creating a printf() wrapper https://playground.arduino.cc/Main/Printf/
+        size_t printf(const char *fmt, ...);
+
+        size_t printf(const __FlashStringHelper *fmt, ...);
+
+        HardwareSerial *getSerial();
+
+    protected:
+        HardwareSerial *_stream;
+
+    private:
+        long _baudRate;
+        bool _wifiDiagnostic;
+
+        bool _debug;
+    };
+}
 //extern TBD_WiFi_Portail_SerialDebug _TBD_WiFi_Portail_SerialDebug;
 
 #endif //TBD_WIFI_PORTAIL_SERIALDEBUG_H

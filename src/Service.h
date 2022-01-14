@@ -8,20 +8,23 @@
 #include <Arduino.h>
 
 #include <ArduinoJson.h>
+namespace WiFi_Portail_API {
 
-class Service {
-public:
-    ~Service(){};
+    class Service {
+    public:
+        ~Service() {};
 
-    virtual DynamicJsonDocument toJson() { };
-    virtual DynamicJsonDocument toJson2() { };
+        virtual DynamicJsonDocument toJson() {};
 
-    virtual DynamicJsonDocument toObj() { };
+        virtual DynamicJsonDocument toJson2() {};
 
-    virtual String toString() { return F("**Service.toString()**"); };
-    virtual String toString2() { return F("**Service.toString2()**"); };
+        virtual DynamicJsonDocument toObj() {};
 
-};
+        virtual String toString() { return F("**Service.toString()**"); };
 
+        virtual String toString2() { return F("**Service.toString2()**"); };
+
+    };
+}
 
 #endif //SERVICE_H

@@ -18,76 +18,97 @@
 
 #include <vector>
 #include <ArduinoJson.h>
+namespace WiFi_Portail_API {
 
 // empty function
-static void handleNULLWebSocket(AsyncWebSocketClient * client = nullptr, String value = "") {}
+    static void handleNULLWebSocket(AsyncWebSocketClient *client = nullptr, String value = "") {}
 
-typedef std::function<void(AsyncWebSocketClient * client, String value)> HandlerFunctionWebSocket; //unknow number of params
+    typedef std::function<void(AsyncWebSocketClient* client,String value)>HandlerFunctionWebSocket; //unknow number of params
 
 // class Path, Method and OnCommand
-class PathMethodOnRequestWebSocket
-{
-public:
-    const char *commandNameIn;
-    const char *commandNameOut;
-    HandlerFunctionWebSocket onCommand;
+    class PathMethodOnRequestWebSocket {
+    public:
+        const char *commandNameIn;
+        const char *commandNameOut;
+        HandlerFunctionWebSocket onCommand;
 
-    PathMethodOnRequestWebSocket() : commandNameIn(""), commandNameOut(""), onCommand(handleNULLWebSocket) {}
-    PathMethodOnRequestWebSocket(const char *_commandNameIn, const char *_commandNameOut, HandlerFunctionWebSocket _onCommand) : commandNameIn(_commandNameIn), commandNameOut(_commandNameOut), onCommand(_onCommand) {}
-    ~PathMethodOnRequestWebSocket() {}
+        PathMethodOnRequestWebSocket() : commandNameIn(""), commandNameOut(""), onCommand(handleNULLWebSocket) {}
 
-    // surcharge operator
-    void operator()(AsyncWebSocketClient * client = nullptr, String value = "") { return onCommand(client, value); } // can be called like : pathMethodOnRequestWebSocket(0, "")
-    void operator()(String value = "") { return onCommand(nullptr, value); }                            // can be called like : pathMethodOnRequestWebSocket("")
-};
+        PathMethodOnRequestWebSocket(const char *_commandNameIn, const char *_commandNameOut, HandlerFunctionWebSocket _onCommand) :
+        commandNameIn(_commandNameIn), commandNameOut(_commandNameOut), onCommand(_onCommand) {}
 
-class TBD_WiFi_Portail_WebSocket
-{
-public:
-    TBD_WiFi_Portail_WebSocket(TBD_WiFi_Portail_SerialDebug &serialDebug, TBD_WiFi_Portail_WebServer &webServer /*, TBD_WiFi_Portail_Wifi& wifi*/, const String &root = "/ws");
-    ~TBD_WiFi_Portail_WebSocket();
+        ~PathMethodOnRequestWebSocket() {}
 
-    void addWebEvents(TBD_WiFi_Portail_WebEvents &webEvents);
-    void addNTP(Service &ntp);
-    void addESPInfos(Service &espInfos);
+        // surcharge operator
+        void operator()(AsyncWebSocketClient *client = nullptr, String value = "") {
+            return onCommand(client, value);
+        } // can be called like : pathMethodOnRequestWebSocket(0, "")
+        void operator()(String value = "") {
+            return onCommand(nullptr, value);
+        }                            // can be called like : pathMethodOnRequestWebSocket("")
+    };
 
-    void addCommand(const char *commandNameIn, const char *commandNameOut, HandlerFunctionWebSocket onCommand);
+    class WebSocket {
+    public:
+        WebSocket(SerialDebug &serialDebug, WebServer &webServer /*, WebSocketWifi& wifi*/, const String &root = "/ws");
 
-    void begin();
-    void loop();
+        ~WebSocket();
 
-    void handleReceivedMessage(const String &message, AsyncWebSocketClient * client);
-    void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
+        void addWebEvents(WebEvents &webEvents);
 
-    void close_WebSocket();
-    /*void envoieAllInfosNewClient(AsyncWebSocketClient * client);
-    void envoieHardwareInfosToClient(AsyncWebSocketClient * client);
-    void envoieValuesToClient(AsyncWebSocketClient * client);*/
+        void addNTP(Service &ntp);
+
+        void addESPInfos(Service &espInfos);
+
+        void addCommand(const char *commandNameIn, const char *commandNameOut, HandlerFunctionWebSocket onCommand);
+
+        void begin();
+
+        void loop();
+
+        void handleReceivedMessage(const String &message, AsyncWebSocketClient *client);
+
+        void
+        onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
+
+        void close_WebSocket();
+
+        /*void envoieAllInfosNewClient(AsyncWebSocketClient * client);
+        void envoieHardwareInfosToClient(AsyncWebSocketClient * client);
+        void envoieValuesToClient(AsyncWebSocketClient * client);*/
 
 
-    void send(const JsonDocument &doc, AsyncWebSocketClient * client = nullptr);
-    void send(const String &data, AsyncWebSocketClient * client = nullptr);
-    void sendStringResultOf(const String &resultOfName, const String &result, AsyncWebSocketClient * client = nullptr);
-    void sendJsonResultOf(const String &resultOfName, const DynamicJsonDocument &result, AsyncWebSocketClient * client = nullptr);
+        void send(const JsonDocument &doc, AsyncWebSocketClient *client = nullptr);
 
-    void handleCommandScan(AsyncWebSocketClient * client = nullptr, String value = "");
-    void handleCommandStatus(AsyncWebSocketClient * client = nullptr, String value = "");
-    void handleCommandRealTime(AsyncWebSocketClient * client = nullptr, String value = "");
-    void handleCommandNetwork(AsyncWebSocketClient * client = nullptr, String value = "");
-    void handleCommandFiles(AsyncWebSocketClient * client = nullptr, String value = "");
+        void send(const String &data, AsyncWebSocketClient *client = nullptr);
 
-    AsyncWebSocket *webSocket;
+        void
+        sendStringResultOf(const String &resultOfName, const String &result, AsyncWebSocketClient *client = nullptr);
 
-private:
-    TBD_WiFi_Portail_SerialDebug *_serialDebug;
-    TBD_WiFi_Portail_WebServer *_webServer;
-    TBD_WiFi_Portail_WebEvents *_webEvents;
-    //TBD_WiFi_Portail_Wifi* _wifi;
-    Service *_ntp;
-    Service *_espInfos;
+        void sendJsonResultOf(const String &resultOfName, const DynamicJsonDocument &result, AsyncWebSocketClient *client = nullptr);
 
-    String _root;
-    std::vector<PathMethodOnRequestWebSocket> *_allCommands;
-};
+        void handleCommandScan(AsyncWebSocketClient *client = nullptr, String value = "");
 
+        void handleCommandStatus(AsyncWebSocketClient *client = nullptr, String value = "");
+
+        void handleCommandRealTime(AsyncWebSocketClient *client = nullptr, String value = "");
+
+        void handleCommandNetwork(AsyncWebSocketClient *client = nullptr, String value = "");
+
+        void handleCommandFiles(AsyncWebSocketClient *client = nullptr, String value = "");
+
+        AsyncWebSocket *webSocket;
+
+    private:
+        SerialDebug *_serialDebug;
+        WebServer *_webServer;
+        WebEvents *_webEvents;
+        //_wifiManager* _wifiManager;
+        Service *_ntp;
+        Service *_espInfos;
+
+        String _root;
+        std::vector <PathMethodOnRequestWebSocket> *_allCommands;
+    };
+}
 #endif //TBD_WIFI_PORTAIL_WEBSOCKET_H

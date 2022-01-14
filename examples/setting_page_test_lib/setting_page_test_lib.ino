@@ -23,27 +23,27 @@
 // https://github.com/esprfid/esp-rfid
 
 
-TBD_WiFi_Portail_SerialDebug debug(Serial, 115200, true); // TBD_WiFi_Portail_SerialDebug debug; => (port = Serial, baudRate=115200, wifiDiagnostic=false) par default
-TBD_WiFi_Portail_FileSystem files(debug, false);
-TBD_WiFi_Portail_FilesManager filesManager(debug, files);
+WiFi_Portail_API::SerialDebug debug(Serial, 115200, true); // TBD_WiFi_Portail_SerialDebug debug; => (port = Serial, baudRate=115200, wifiDiagnostic=false) par default
+WiFi_Portail_API::FileSystem files(debug, false);
+WiFi_Portail_API::FilesManager filesManager(debug, files);
 
-TBD_WiFi_Portail_Wifi wifi(debug/*, filesManager*/);
+WiFi_Portail_API::WifiManager wifi(debug/*, filesManager*/);
 #ifdef USE_MDNS
-TBD_WiFi_Portail_MDNS mdns(debug, wifi);
+WiFi_Portail_API::MDNS mdns(debug, wifi);
 #endif // USE_MDNS
 #ifdef USE_FTP
-TBD_WiFi_Portail_FTP ftp(debug, files);
+WiFi_Portail_API::FTP ftp(debug, files);
 #endif // USE_FTP
-TBD_WiFi_Portail_WebServer webServer(debug, files, wifi, 80);
-TBD_WiFi_Portail_WebSocket webSocket(debug, webServer/*, wifi*/, "/ws");
-TBD_WiFi_Portail_WebEvents webEvents(debug, webServer, "/events", "/eventsAdmin");
+WiFi_Portail_API::WebServer webServer(debug, files, wifi, 80);
+WiFi_Portail_API::WebSocket webSocket(debug, webServer/*, wifi*/, "/ws");
+WiFi_Portail_API::WebEvents webEvents(debug, webServer, "/events", "/eventsAdmin");
 
 #ifdef USE_NTP
-TBD_WiFi_Portail_NTP ntp(debug, "pool.ntp.org");
+WiFi_Portail_API::NTP ntp(debug, "pool.ntp.org");
 #endif // USE_NTP
-TBD_WiFi_Portail_ESP ESPInfos;
+WiFi_Portail_API::ESPInfos espInfos;
 #ifdef USE_OTA
-TBD_WiFi_Portail_OTA ota(debug, files);
+WiFi_Portail_API::OTA ota(debug, files);
 #endif // USE_OTA
 
 void handleStop(AsyncWebServerRequest *request) {
@@ -101,14 +101,14 @@ void setup()
 #ifdef USE_NTP
   webServer.addNTP(ntp);
 #endif // USE_NTP
-  webServer.addESPInfos(ESPInfos);
+  webServer.addESPInfos(espInfos);
   webServer.begin();
 
   webSocket.addWebEvents(webEvents);
 #ifdef USE_NTP
   webSocket.addNTP(ntp);
 #endif // USE_NTP
-  webSocket.addESPInfos(ESPInfos);
+  webSocket.addESPInfos(espInfos);
   webSocket.begin();
 
   webEvents.begin();
@@ -123,9 +123,9 @@ void setup()
 
 
 #ifdef USE_NTP
-  ESPInfos.addNTP(ntp);
+  espInfos.addNTP(ntp);
 #endif // USE_NTP
-  ESPInfos.addFileSystem(files);
+  espInfos.addFileSystem(files);
 
 
   

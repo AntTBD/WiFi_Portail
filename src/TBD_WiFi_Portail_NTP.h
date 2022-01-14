@@ -26,90 +26,112 @@
     using namespace std::placeholders;" \
     and, DO NOT USE OTHER "using namespace std" in your code
 
+namespace WiFi_Portail_API {
+
+
 // https://projetsdiy.fr/esp8266-web-recuperer-heure-internet-ntp-ntpclientlib-ntpclient/
 
-struct RealTime
-{
-    int day;
-    int month;
-    int year;
-    int hour;
-    int min;
-    int sec;
-    float timezone;
-    bool summerTime;
+    struct RealTime {
+        int day;
+        int month;
+        int year;
+        int hour;
+        int min;
+        int sec;
+        float timezone;
+        bool summerTime;
 
-    String toString() const
-    {
-        return String(this->day) + F("/") + String(this->month) + F("/") + String(this->year) + F(" ") + String(this->hour) + F(":") + String(this->min) + F(":") + String(this->sec) + F(" UTC") + (this->timezone < 0 ? F("") : F("+")) + String(this->timezone) + F(" ") + (this->summerTime ? F("Summer Time") : F("Winter Time"));
-    }
-};
+        String toString() const {
+            return String(this->day) + F("/") + String(this->month) + F("/") + String(this->year) + F(" ") +
+                   String(this->hour) + F(":") + String(this->min) + F(":") + String(this->sec) + F(" UTC") +
+                   (this->timezone < 0 ? F("") : F("+")) + String(this->timezone) + F(" ") +
+                   (this->summerTime ? F("Summer Time") : F("Winter Time"));
+        }
+    };
 
-class TBD_WiFi_Portail_NTP : public Service
-{
-public:
-    TBD_WiFi_Portail_NTP(TBD_WiFi_Portail_SerialDebug &serialDebug, const String &ntpServerName = "pool.ntp.org");
-    ~TBD_WiFi_Portail_NTP();
+    class NTP : public Service {
+    public:
+        NTP(SerialDebug &serialDebug, const String &ntpServerName = "pool.ntp.org");
 
-    void begin();
-    void loop();
+        ~NTP();
 
-    bool setNtpServerName(const String &ntpServerName);
-    String getNtpServerName() const;
+        void begin();
 
-    bool setInterval(int interval);
-    int getInterval() const;
+        void loop();
 
-    bool setTimeZone(int8_t timeZone, int8_t minutes = 0);
-    int8_t getTimeZoneHours() const;
-    int8_t getTimeZoneMinutes() const;
+        bool setNtpServerName(const String &ntpServerName);
 
-    void setDayLight(bool dayLight);
-    bool getDayLight() const;
+        String getNtpServerName() const;
 
-    String getTimeDateString() const;
-    String getUptimeString() const;
+        bool setInterval(int interval);
 
-    bool couldSendTime() const;
-    void stopSendTime();
+        int getInterval() const;
 
-    RealTime getRealTime() const;
+        bool setTimeZone(int8_t timeZone, int8_t minutes = 0);
 
-    void processSyncEvent(NTPSyncEvent_t ntpEvent);
-    void testIfSyncEventTriggered();
-    void onNTPSyncEventFunction(NTPSyncEvent_t event);
-    void updateRealTimeValue();
-    DynamicJsonDocument getRealTimeJson();
-    DynamicJsonDocument getRealTimeJsonObj();
-    String getRealTimeString();
-    DynamicJsonDocument getUptimeJson();
+        int8_t getTimeZoneHours() const;
 
-    DynamicJsonDocument toJson() override { return this->getRealTimeJson(); };
-    DynamicJsonDocument toJson2() override { return this->getUptimeJson(); };
+        int8_t getTimeZoneMinutes() const;
 
-    DynamicJsonDocument toObj() override { return this->getRealTimeJsonObj(); };
+        void setDayLight(bool dayLight);
 
-    String toString() override { return this->getRealTimeString(); };
-    String toString2() override { return this->getUptimeString(); };
+        bool getDayLight() const;
 
-private:
-    TBD_WiFi_Portail_SerialDebug *_serialDebug;
+        String getTimeDateString() const;
 
-    boolean _syncEventTriggered = false; // True if a time even has been triggered
-    boolean _couldSendTime = false;
-    NTPSyncEvent_t _ntpEvent; // Last triggered event
-    AsyncUDP *_udp;
+        String getUptimeString() const;
 
-    NTPClient *_ntp; // for NtpClientLib.h
-    RealTime _realTime;
+        bool couldSendTime() const;
 
-    String _ntpServerName;
-    int _timeZone; // 0=UTC+0h
-    int _minutesTimeZone;
-    bool _dayLight;
-    int _timeout;
-    int _interval;
-};
+        void stopSendTime();
+
+        RealTime getRealTime() const;
+
+        void processSyncEvent(NTPSyncEvent_t ntpEvent);
+
+        void testIfSyncEventTriggered();
+
+        void onNTPSyncEventFunction(NTPSyncEvent_t event);
+
+        void updateRealTimeValue();
+
+        DynamicJsonDocument getRealTimeJson();
+
+        DynamicJsonDocument getRealTimeJsonObj();
+
+        String getRealTimeString();
+
+        DynamicJsonDocument getUptimeJson();
+
+        DynamicJsonDocument toJson() override { return this->getRealTimeJson(); };
+
+        DynamicJsonDocument toJson2() override { return this->getUptimeJson(); };
+
+        DynamicJsonDocument toObj() override { return this->getRealTimeJsonObj(); };
+
+        String toString() override { return this->getRealTimeString(); };
+
+        String toString2() override { return this->getUptimeString(); };
+
+    private:
+        SerialDebug *_serialDebug;
+
+        boolean _syncEventTriggered = false; // True if a time even has been triggered
+        boolean _couldSendTime = false;
+        NTPSyncEvent_t _ntpEvent; // Last triggered event
+        AsyncUDP *_udp;
+
+        NTPClient *_ntp; // for NtpClientLib.h
+        RealTime _realTime;
+
+        String _ntpServerName;
+        int _timeZone; // 0=UTC+0h
+        int _minutesTimeZone;
+        bool _dayLight;
+        int _timeout;
+        int _interval;
+    };
+}
 #endif // USE_NTP
 
 #endif //TBD_WIFI_PORTAIL_NTP_H

@@ -15,47 +15,61 @@
 #include <ESP8266WiFiMulti.h>
 
 #include <ArduinoJson.h>
+namespace WiFi_Portail_API {
 
-class TBD_WiFi_Portail_Wifi
-{
-public:
-    TBD_WiFi_Portail_Wifi(TBD_WiFi_Portail_SerialDebug &serialDebug /*, TBD_WiFi_Portail_FilesManager& _filesManager*/, WiFiMode_t startMode = WIFI_STA, bool resetWifi = false);
+    class WifiManager {
+    public:
+        WifiManager(SerialDebug &serialDebug /*, FilesManager& _filesManager*/, WiFiMode_t startMode = WIFI_STA,
+             bool resetWifi = false);
 
-    ~TBD_WiFi_Portail_Wifi();
+        ~WifiManager();
 
-    void begin();
-    void onWifiConnect(const WiFiEventStationModeConnected &event);
-    void onWifiDisconnect(const WiFiEventStationModeDisconnected &event);
-    void onWifiGotIP(const WiFiEventStationModeGotIP &event);
-    bool startAP(AP *ap);
-    void fallbacktoAPMode();
-    bool connectSTA(std::vector<STA> *allSTA, String hostname, uint32_t connectionTimeoutMUltiWifi);
-    void infosWifi();
-    String wifiStatusToString() const;
-    DynamicJsonDocument getNetworkInfosJson();
-    String getNetworkInfosString();
-    void disableWifi();
-    void enableWifi();
-    void resetWifi();
+        void begin();
 
-    // ---------- Structure all infos -----------
-    WifiAll *wifiAll; // max 10 STA
+        void onWifiConnect(const WiFiEventStationModeConnected &event);
 
-private:
-    TBD_WiFi_Portail_SerialDebug *_serialDebug;
-    //TBD_WiFi_Portail_FilesManager* _filesManager;
+        void onWifiDisconnect(const WiFiEventStationModeDisconnected &event);
 
-    // ------------------- wifi config -----------------
-    ESP8266WiFiMulti _wifiMulti;
-    uint32_t _connectTimeoutMs; // WiFi connect timeout per AP. Increase when connecting takes longer.  = WIFI_CONNECT_TIMEOUT_MS 5000
-    bool _wifiFlag = false;
-    bool configMode = false;
+        void onWifiGotIP(const WiFiEventStationModeGotIP &event);
 
-    bool _inAPMode = false;
-    bool _isWifiConnected = false;
+        bool startAP(AP *ap);
 
-    // ------------- event listeners ------------
-    WiFiEventHandler _wifiDisconnectHandler, _wifiConnectHandler, _wifiOnStationModeGotIPHandler;
-};
+        void fallbacktoAPMode();
 
+        bool connectSTA(std::vector <STA> *allSTA, String hostname, uint32_t connectionTimeoutMUltiWifi);
+
+        void infosWifi();
+
+        String wifiStatusToString() const;
+
+        DynamicJsonDocument getNetworkInfosJson();
+
+        String getNetworkInfosString();
+
+        void disableWifi();
+
+        void enableWifi();
+
+        void resetWifi();
+
+        // ---------- Structure all infos -----------
+        WifiAll *wifiAll; // max 10 STA
+
+    private:
+        SerialDebug *_serialDebug;
+        //FilesManager* _filesManager;
+
+        // ------------------- wifi config -----------------
+        ESP8266WiFiMulti _wifiMulti;
+        uint32_t _connectTimeoutMs; // WiFi connect timeout per AP. Increase when connecting takes longer.  = WIFI_CONNECT_TIMEOUT_MS 5000
+        bool _wifiFlag = false;
+        bool configMode = false;
+
+        bool _inAPMode = false;
+        bool _isWifiConnected = false;
+
+        // ------------- event listeners ------------
+        WiFiEventHandler _wifiDisconnectHandler, _wifiConnectHandler, _wifiOnStationModeGotIPHandler;
+    };
+}
 #endif //TBD_WIFI_PORTAIL_WIFI_H

@@ -11,7 +11,7 @@
 #error This code is intended to run on the ESP8266 platform! Please check your Tools->Board setting.
 #endif
 
-#define WIFI_PORTAIL_VERSION "V0.0.4"
+#define WIFI_PORTAIL_VERSION "V0.0.5"
 
 //#define DEBUG_ESP_WIFI 1
 //#define DEBUG_ESP_PORT Serial
@@ -26,24 +26,25 @@ static void restartESP()
     ESP.restart();
 }
 
-class TBD_WiFi_Portail_SerialDebug;
-class TBD_WiFi_Portail_FileSystem;
-class TBD_WiFi_Portail_FilesManager;
-class TBD_WiFi_Portail_Package;
-class AP;
-class STA;
-class WifiAll;
-class TBD_WiFi_Portail_Wifi;
-class TBD_WiFi_Portail_MDNS;
-class TBD_WiFi_Portail_FTP;
-class TBD_WiFi_Portail_WebServer;
-class TBD_WiFi_Portail_WebSocket;
-class TBD_WiFi_Portail_WebEvents;
-class TBD_WiFi_Portail_NTP;
-class TBD_WiFi_Portail_ESP;
-class TBD_WiFi_Portail_OTA;
-
-/* #include "TBD_WiFi_Portail_SerialDebug.h"
+namespace WiFi_Portail_API {
+    class SerialDebug;
+    class FileSystem;
+    class FilesManager;
+    class Package;
+    class AP;
+    class STA;
+    class WifiAll;
+    class WifiManager;
+    class MDNS;
+    class FTP;
+    class WebServer;
+    class WebSocket;
+    class WebEvents;
+    class NTP;
+    class ESPInfos;
+    class OTA;
+}
+#include "TBD_WiFi_Portail_SerialDebug.h"
 #include "TBD_WiFi_Portail_FileSystem.h"
 #include "TBD_WiFi_Portail_FilesManager.h"
 #include "TBD_WiFi_Portail_Package.h"
@@ -56,60 +57,84 @@ class TBD_WiFi_Portail_OTA;
 #include "TBD_WiFi_Portail_WebEvents.h"
 #include "TBD_WiFi_Portail_NTP.h"
 #include "TBD_WiFi_Portail_ESP.h"
-#include "TBD_WiFi_Portail_OTA.h" */
+#include "TBD_WiFi_Portail_OTA.h"
 
-class TBD_WiFi_Portail
-{
-public:
-    //TBD_WiFi_Portail() {};
-    /*TBD_WiFi_Portail(TBD_WiFi_Portail_SerialDebug& _portail_SerialDebug, TBD_WiFi_Portail_FileSystem& _portail_FileSystem) :
-        portail_SerialDebug(&_portail_SerialDebug),
-        portail_FileSystem(&_portail_FileSystem)
-        {};
-
-    ~TBD_WiFi_Portail() {};*/
-
-    /*using TBD_WiFi_Portail_SerialDebug::begin;
-    using TBD_WiFi_Portail_FileSystem::setup;
-    using TBD_WiFi_Portail_Wifi::setup;
-    using TBD_WiFi_Portail_MDNS::setup;
-    using TBD_WiFi_Portail_FTP::setup;
-    using TBD_WiFi_Portail_WebServer::setup;
-    using TBD_WiFi_Portail_WebSocket::setup;
-    using TBD_WiFi_Portail_WebEvents::setup;
-
-
-    using TBD_WiFi_Portail_MDNS::loop;
-    using TBD_WiFi_Portail_FTP::loop;
-*/
-
-    /*
-    bool loadAllInformationsFromJsonFiles();
-
-    bool setup_Wifi(); // Wifi
-
-    bool setup_MDNS(); // MDNS
-
-    bool setup_FTP(); // FTP
-
-    bool setup_WebServer(); // WebServer
-
-    bool setup_WebSocket(); // WebSocket
-    bool setup_WebEvents(); // WebEvents*/
-
-protected:
-    /*TBD_WiFi_Portail_SerialDebug* portail_SerialDebug;
-    TBD_WiFi_Portail_FileSystem* portail_FileSystem;
-    TBD_WiFi_Portail_Wifi;
-    TBD_WiFi_Portail_MDNS;
-    TBD_WiFi_Portail_FTP;
-    TBD_WiFi_Portail_WebServer;
-    TBD_WiFi_Portail_WebSocket;
-    TBD_WiFi_Portail_WebEvents;*/
-
-private:
-};
-
-//extern TBD_WiFi_Portail TBD_WiFi_Portail;
+namespace WiFi_Portail_API {
+    class TBD_WiFi_Portail {
+//    public:
+//        TBD_WiFi_Portail() {
+//            this->serial = new SerialDebug(&this);
+//            this->fileSystem = new FileSystem(&this);
+//            this->wifi = new Wifi(&this);
+//            this->mdns = new MDNS(&this);
+//            this->ftpServer = new FTP(&this);
+//            this->webServer = new WebServer(&this);
+//            this->webSocket = new WebSocket(&this);
+//            this->webEvents = new WebEvents(&this);
+//            this->ntp = new NTP(&this);
+//            this->esp = new ESPInfo(&this);
+//            this->ota = new OTA(&this);
+//        }
+//
+//        ~TBD_WiFi_Portail() {
+//            delete (this->serial);
+//            delete (this->fileSystem);
+//            delete (this->wifi);
+//            delete (this->mdns);
+//            delete (this->ftpServer);
+//            delete (this->webServer);
+//            delete (this->webSocket);
+//            delete (this->webEvents);
+//            delete (this->ntp);
+//            delete (this->esp);
+//            delete (this->ota);
+//        }
+//
+//
+//        /*using TBD_WiFi_Portail_SerialDebug::begin;
+//        using TBD_WiFi_Portail_FileSystem::setup;
+//        using TBD_WiFi_Portail_Wifi::setup;
+//        using TBD_WiFi_Portail_MDNS::setup;
+//        using TBD_WiFi_Portail_FTP::setup;
+//        using TBD_WiFi_Portail_WebServer::setup;
+//        using TBD_WiFi_Portail_WebSocket::setup;
+//        using TBD_WiFi_Portail_WebEvents::setup;
+//
+//
+//        using TBD_WiFi_Portail_MDNS::loop;
+//        using TBD_WiFi_Portail_FTP::loop;
+//    */
+//
+//        /*
+//        bool loadAllInformationsFromJsonFiles();
+//
+//        bool setup_Wifi(); // Wifi
+//
+//        bool setup_MDNS(); // MDNS
+//
+//        bool setup_FTP(); // FTP
+//
+//        bool setup_WebServer(); // WebServer
+//
+//        bool setup_WebSocket(); // WebSocket
+//        bool setup_WebEvents(); // WebEvents*/
+//
+//    public:
+//        SerialDebug *serial;
+//        FileSystem *fileSystem;
+//        WifiManager *wifi;
+//        MDNS *mdns;
+//        FTP *ftpServer;
+//        WebServer *webServer;
+//        WebSocket *webSocket;
+//        WebEvents *webEvents;
+//        NTP *ntp;
+//        ESPInfo *esp;
+//        OTA *ota;
+//
+//    private:
+    };
+}
+extern WiFi_Portail_API::TBD_WiFi_Portail WiFi_Portail;
 
 #endif //TBD_WIFI_PORTAIL_H

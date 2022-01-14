@@ -11,30 +11,41 @@
 #include "TBD_WiFi_Portail_SerialDebug.h"
 #include "TBD_WiFi_Portail_Wifi.h"
 
+#define NO_GLOBAL_MDNS
 #include <ESP8266mDNS.h>
+using MDNSResponder = esp8266::MDNSImplementation::MDNSResponder;
+extern MDNSResponder MDNSOfficial;
+
 // https://tttapa.github.io/ESP8266/Chap08%20-%20mDNS.html
 // to replace IP address by a name
 
-class TBD_WiFi_Portail_MDNS
-{
-public:
-    TBD_WiFi_Portail_MDNS(TBD_WiFi_Portail_SerialDebug &serialDebug, TBD_WiFi_Portail_Wifi &allWifi);
-    ~TBD_WiFi_Portail_MDNS();
+namespace WiFi_Portail_API {
 
-    void begin();
-    void loop();
 
-    String getMdnsName() const;
-    void setMdnsName(const String &mdnsName);
-    bool MDNSisRunning() const;
-    String toString() const;
+    class MDNS {
+    public:
+        MDNS(SerialDebug &serialDebug, WifiManager &_wifiManager);
 
-private:
-    TBD_WiFi_Portail_SerialDebug *_serialDebug;
-    TBD_WiFi_Portail_Wifi *_allWifi;
-    bool _updateMDNS;
-};
+        ~MDNS();
 
+        void begin();
+
+        void loop();
+
+        String getMdnsName() const;
+
+        void setMdnsName(const String &mdnsName);
+
+        bool MDNSisRunning() const;
+
+        String toString() const;
+
+    private:
+        SerialDebug *_serialDebug;
+        WifiManager *_wifiManager;
+        bool _updateMDNS;
+    };
+}
 #endif // USE_MDNS
 
 #endif //TBD_WIFI_PORTAIL_MDNS_H

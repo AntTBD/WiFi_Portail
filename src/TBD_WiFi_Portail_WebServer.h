@@ -24,77 +24,95 @@
 #include <vector>
 #include <ArduinoJson.h>
 
-static String IpToString(IPAddress adress)
-{
-    return (String)adress[0] + "." + (String)adress[1] + "." + (String)adress[2] + "." + (String)adress[3];
-}
+namespace WiFi_Portail_API {
+    static String IpToString(IPAddress adress) {
+        return (String) adress[0] + "." + (String) adress[1] + "." + (String) adress[2] + "." + (String) adress[3];
+    }
 
 // empty function
-static void handleNULL(AsyncWebServerRequest *request) {}
+    static void handleNULL(AsyncWebServerRequest *request) {}
 
 // class Path, Method and OnRequest for serve.on(...)
-class PathMethodOnRequest
-{
-public:
-    const char *uri;
-    WebRequestMethodComposite method;
-    ArRequestHandlerFunction onRequest;
+    class PathMethodOnRequest {
+    public:
+        const char *uri;
+        WebRequestMethodComposite method;
+        ArRequestHandlerFunction onRequest;
 
-    PathMethodOnRequest() : uri(""), method(HTTP_ANY), onRequest(handleNULL) {}
-    PathMethodOnRequest(const char *_uri, WebRequestMethodComposite _method, ArRequestHandlerFunction _onRequest) : uri(_uri), method(_method), onRequest(_onRequest) {}
-    //PathMethodOnRequest(const char *_uri, WebRequestMethodComposite _method, void* _onRequest) : uri(_uri), method(_method), onRequest(_onRequest) {}
-    ~PathMethodOnRequest() {}
-};
+        PathMethodOnRequest() : uri(""), method(HTTP_ANY), onRequest(handleNULL) {}
 
-class TBD_WiFi_Portail_WebServer
-{
-public:
-    TBD_WiFi_Portail_WebServer(TBD_WiFi_Portail_SerialDebug &serialDebug, TBD_WiFi_Portail_FileSystem &fileSystem, TBD_WiFi_Portail_Wifi &wifi, int port);
-    ~TBD_WiFi_Portail_WebServer();
+        PathMethodOnRequest(const char *_uri, WebRequestMethodComposite _method, ArRequestHandlerFunction _onRequest)
+                : uri(_uri), method(_method), onRequest(_onRequest) {}
 
-    // add root
-    void addRoot(const char *uri, WebRequestMethodComposite method, ArRequestHandlerFunction onRequest);
+        //PathMethodOnRequest(const char *_uri, WebRequestMethodComposite _method, void* _onRequest) : uri(_uri), method(_method), onRequest(_onRequest) {}
+        ~PathMethodOnRequest() {}
+    };
 
-    void addWebEvents(TBD_WiFi_Portail_WebEvents &webEvents);
-    void addWebSocket(TBD_WiFi_Portail_WebSocket &webSocket);
-    void addNTP(Service &ntp);
-    void addESPInfos(Service &espInfos);
+    class WebServer {
+    public:
+        WebServer(SerialDebug &serialDebug, FileSystem &fileSystem, WifiManager &wifiManager, int port);
 
-    void begin();
+        ~WebServer();
 
-    void replyOK(AsyncWebServerRequest *request);
-    void replyOKWithMsg(const String &msg, AsyncWebServerRequest *request);
-    void replyNotFound(String msg, AsyncWebServerRequest *request);
-    void replyBadRequest(const String &msg, AsyncWebServerRequest *request);
-    void replyServerError(const String &msg, AsyncWebServerRequest *request);
-    void handleWebRequests(AsyncWebServerRequest *request);
-    void handleResetWifi(AsyncWebServerRequest *request);
-    void handleLoginConsole(AsyncWebServerRequest *request);
-    void handleScanWifi(AsyncWebServerRequest *request);
-    DynamicJsonDocument handleScanResult(int networksFound);
-    void handleGetRealTime(AsyncWebServerRequest *request);
-    void handleGetUptime(AsyncWebServerRequest *request);
-    void handleGetESPInfos(AsyncWebServerRequest *request);
-    void handleDebug(AsyncWebServerRequest *request);
+        // add root
+        void addRoot(const char *uri, WebRequestMethodComposite method, ArRequestHandlerFunction onRequest);
 
-    // ------------------------------------------ Init Serveur Web ---------------------------------------------
-    AsyncWebServer *server;
+        void addWebEvents(WebEvents &webEvents);
 
-    TBD_WiFi_Portail_Wifi *_wifi;
-    TBD_WiFi_Portail_FileSystem *_fileSystem;
+        void addWebSocket(WebSocket &webSocket);
 
-private:
-    TBD_WiFi_Portail_SerialDebug *_serialDebug;
-    TBD_WiFi_Portail_WebEvents *_webEvents;
-    TBD_WiFi_Portail_WebSocket *_webSocket;
-    Service *_ntp;
-    Service *_espInfos;
+        void addNTP(Service &ntp);
 
-    int _port;
-    std::vector<PathMethodOnRequest> *_allRoots;
+        void addESPInfos(Service &espInfos);
 
-    const char *_loginConsole_username;
-    const char *_loginConsole_password;
-};
+        void begin();
 
+        void replyOK(AsyncWebServerRequest *request);
+
+        void replyOKWithMsg(const String &msg, AsyncWebServerRequest *request);
+
+        void replyNotFound(String msg, AsyncWebServerRequest *request);
+
+        void replyBadRequest(const String &msg, AsyncWebServerRequest *request);
+
+        void replyServerError(const String &msg, AsyncWebServerRequest *request);
+
+        void handleWebRequests(AsyncWebServerRequest *request);
+
+        void handleResetWifi(AsyncWebServerRequest *request);
+
+        void handleLoginConsole(AsyncWebServerRequest *request);
+
+        void handleScanWifi(AsyncWebServerRequest *request);
+
+        DynamicJsonDocument handleScanResult(int networksFound);
+
+        void handleGetRealTime(AsyncWebServerRequest *request);
+
+        void handleGetUptime(AsyncWebServerRequest *request);
+
+        void handleGetESPInfos(AsyncWebServerRequest *request);
+
+        void handleDebug(AsyncWebServerRequest *request);
+
+        // ------------------------------------------ Init Serveur Web ---------------------------------------------
+        AsyncWebServer *server;
+
+        WifiManager *_wifiManager;
+        FileSystem *_fileSystem;
+
+    private:
+        SerialDebug *_serialDebug;
+        WebEvents *_webEvents;
+        WebSocket *_webSocket;
+        Service *_ntp;
+        Service *_espInfos;
+
+        int _port;
+        std::vector <PathMethodOnRequest> *_allRoots;
+
+        const char *_loginConsole_username;
+        const char *_loginConsole_password;
+    };
+}
 #endif //TBD_WIFI_PORTAIL_WEBSERVER_H

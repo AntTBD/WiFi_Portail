@@ -23,49 +23,62 @@
 #include <iostream>
 #include <map>
 
-enum File_Type
-{
-    package,
-    configAllWifi,
-    configFTP,
-    configOTA
-};
+namespace WiFi_Portail_API {
 
-class TBD_WiFi_Portail_FilesManager
-{
-public:
-    TBD_WiFi_Portail_FilesManager(TBD_WiFi_Portail_SerialDebug &serialDebug, TBD_WiFi_Portail_FileSystem &fileSystem);
-    ~TBD_WiFi_Portail_FilesManager();
+    enum File_Type {
+        package,
+        configAllWifi,
+        configFTP,
+        configOTA
+    };
 
-    void add(TBD_WiFi_Portail_Wifi &allWifi);
-    void add(TBD_WiFi_Portail_FTP &ftpSrvLogin);
-    void add(TBD_WiFi_Portail_OTA &ota);
-    void begin();
+    class FilesManager {
+    public:
+        FilesManager(SerialDebug &serialDebug, FileSystem &fileSystem);
 
-    void loadAllInformationsFromJsonFiles();
-    void loadConfigFile(int indice);
-    void loadConfigProject(const String &filename, TBD_WiFi_Portail_Package *package);
-    void loadConfigAllWifi(const String &filename, WifiAll *allWifi);
-    void loadConfigFTP(const String &filename, TBD_WiFi_Portail_FTP *ftpSrvLogin);
-    void loadConfigOTA(const String &filename, TBD_WiFi_Portail_OTA *ota);
+        ~FilesManager();
 
-    void saveConfigAllWifi();
+        void add(WifiManager &wifiManager);
 
-    void printListOfConfigFiles();
+        void add(FTP &ftpSrvLogin);
 
-private:
-    TBD_WiFi_Portail_SerialDebug *_serialDebug;
-    TBD_WiFi_Portail_FileSystem *_fileSystem;
-    TBD_WiFi_Portail_Package *_package;
-    TBD_WiFi_Portail_Wifi *_allWifi;
-    TBD_WiFi_Portail_FTP *_ftpSrvLogin;
-    TBD_WiFi_Portail_OTA *_ota;
+        void add(OTA &ota);
 
-    std::map<int, String> _listOfConfigFiles;
+        void begin();
 
-    void readFile(const String &filename);
-    void deleteFile(const String &path);
-    bool saveJSonToAFile(DynamicJsonDocument *doc, const String &filename);
-    JsonObject getJSonFromFile(DynamicJsonDocument *doc, const String &filename);
-};
+        void loadAllInformationsFromJsonFiles();
+
+        void loadConfigFile(int indice);
+
+        void loadConfigProject(const String &filename, Package *package);
+
+        void loadConfigAllWifi(const String &filename, WifiAll *allWifi);
+
+        void loadConfigFTP(const String &filename, FTP *ftpSrvLogin);
+
+        void loadConfigOTA(const String &filename, OTA *ota);
+
+        void saveConfigAllWifi();
+
+        void printListOfConfigFiles();
+
+    private:
+        SerialDebug *_serialDebug;
+        FileSystem *_fileSystem;
+        Package *_package;
+        WifiManager *_wifiManager;
+        FTP *_ftpSrvLogin;
+        OTA *_ota;
+
+        std::map<int, String> _listOfConfigFiles;
+
+        void readFile(const String &filename);
+
+        void deleteFile(const String &path);
+
+        bool saveJSonToAFile(DynamicJsonDocument *doc, const String &filename);
+
+        JsonObject getJSonFromFile(DynamicJsonDocument *doc, const String &filename);
+    };
+}
 #endif //TBD_WIFI_PORTAIL_FILESMANAGER_H
