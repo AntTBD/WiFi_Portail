@@ -11,10 +11,7 @@
 #include "TBD_WiFi_Portail_SerialDebug.h"
 #include "TBD_WiFi_Portail_Wifi.h"
 
-#define NO_GLOBAL_MDNS
 #include <ESP8266mDNS.h>
-using MDNSResponder = esp8266::MDNSImplementation::MDNSResponder;
-extern MDNSResponder MDNSOfficial;
 
 // https://tttapa.github.io/ESP8266/Chap08%20-%20mDNS.html
 // to replace IP address by a name
@@ -22,11 +19,11 @@ extern MDNSResponder MDNSOfficial;
 namespace WiFi_Portail_API {
 
 
-    class MDNS {
+    class MDNSManager {
     public:
-        MDNS(SerialDebug &serialDebug, WifiManager &_wifiManager);
+        MDNSManager(SerialDebug &serialDebug, WifiManager &_wifiManager);
 
-        ~MDNS();
+        ~MDNSManager();
 
         void begin();
 

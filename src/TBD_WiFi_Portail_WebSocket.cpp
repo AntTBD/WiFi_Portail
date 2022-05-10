@@ -366,13 +366,15 @@ void WebSocket::envoieValuesToClient(uint32_t client_id)
 //--------------------------------------------- RealTime --------------------------------------------------
     void WebSocket::handleCommandRealTime(AsyncWebSocketClient *client, String value) {
         this->_serialDebug->println(F("get realTime"));
-    #ifdef USE_NTP
+#ifdef USE_NTP
         if (this->_ntp != nullptr) {
             this->sendJsonResultOf(F("getRealTime"), this->_ntp->toObj()/*, client*/);// send to all client
         } else {
             this->send(F("NTP not added to WebSocket !"), client);
         }
-    #endif // USE_NTP
+#else
+        this->send(F("NTP not added to WebSocket !"), client);
+#endif // USE_NTP
     }
 
 //--------------------------------------------- Network --------------------------------------------------

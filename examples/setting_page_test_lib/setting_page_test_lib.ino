@@ -29,7 +29,7 @@ WiFi_Portail_API::FilesManager filesManager(debug, files);
 
 WiFi_Portail_API::WifiManager wifi(debug/*, filesManager*/);
 #ifdef USE_MDNS
-WiFi_Portail_API::MDNS mdns(debug, wifi);
+WiFi_Portail_API::MDNSManager mdns(debug, wifi);
 #endif // USE_MDNS
 #ifdef USE_FTP
 WiFi_Portail_API::FTP ftp(debug, files);

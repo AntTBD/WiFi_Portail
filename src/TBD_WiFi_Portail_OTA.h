@@ -28,7 +28,7 @@ namespace WiFi_Portail_API {
 
         void addWebEvents(WebEvents &webEvents);
 
-        void addMDNS(MDNS &mdns);
+        void addMDNS(MDNSManager &mdns);
 
         void setHostname(const String &hostname);
 
@@ -64,7 +64,7 @@ namespace WiFi_Portail_API {
         SerialDebug *_serialDebug;
         FileSystem *_fileSystem;
         WebEvents *_webEvents;
-        MDNS *_mdns;
+        MDNSManager *_mdns;
         String _hostname;
         String _password;
         bool _arduinoOtaUseMDNS;

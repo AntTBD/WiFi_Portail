@@ -36,7 +36,7 @@ namespace WiFi_Portail_API {
         this->_webEvents = &webEvents;
     }
 
-    void OTA::addMDNS(MDNS &mdns) {
+    void OTA::addMDNS(MDNSManager &mdns) {
         this->_mdns = &mdns;
     }
 

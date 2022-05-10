@@ -16,7 +16,7 @@
 //#define DEBUG_ESP_WIFI 1
 //#define DEBUG_ESP_PORT Serial
 
-#define USE_NTP
+//#define USE_NTP
 #define USE_FTP
 #define USE_MDNS
 #define USE_OTA
@@ -27,6 +27,7 @@ static void restartESP()
 }
 
 namespace WiFi_Portail_API {
+    class WiFi_Portail;
     class SerialDebug;
     class FileSystem;
     class FilesManager;
@@ -35,7 +36,7 @@ namespace WiFi_Portail_API {
     class STA;
     class WifiAll;
     class WifiManager;
-    class MDNS;
+    class MDNSManager;
     class FTP;
     class WebServer;
     class WebSocket;
@@ -60,26 +61,26 @@ namespace WiFi_Portail_API {
 #include "TBD_WiFi_Portail_OTA.h"
 
 namespace WiFi_Portail_API {
-    class TBD_WiFi_Portail {
+    class WiFi_Portail {
 //    public:
-//        TBD_WiFi_Portail() {
-//            this->serial = new SerialDebug(&this);
-//            this->fileSystem = new FileSystem(&this);
-//            this->wifi = new Wifi(&this);
-//            this->mdns = new MDNS(&this);
-//            this->ftpServer = new FTP(&this);
-//            this->webServer = new WebServer(&this);
-//            this->webSocket = new WebSocket(&this);
-//            this->webEvents = new WebEvents(&this);
-//            this->ntp = new NTP(&this);
-//            this->esp = new ESPInfo(&this);
-//            this->ota = new OTA(&this);
+//        WiFi_Portail() {
+//            this->serial = nullptr;
+//            this->fileSystem = nullptr;
+//            this->wifiManager = nullptr;
+//            this->mdns = nullptr;
+//            this->ftpServer = nullptr;
+//            this->webServer = nullptr;
+//            this->webSocket = nullptr;
+//            this->webEvents = nullptr;
+//            this->ntp = nullptr;
+//            this->esp = nullptr;
+//            this->ota = nullptr;
 //        }
 //
-//        ~TBD_WiFi_Portail() {
+//        ~WiFi_Portail() {
 //            delete (this->serial);
 //            delete (this->fileSystem);
-//            delete (this->wifi);
+//            delete (this->wifiManager);
 //            delete (this->mdns);
 //            delete (this->ftpServer);
 //            delete (this->webServer);
@@ -88,6 +89,50 @@ namespace WiFi_Portail_API {
 //            delete (this->ntp);
 //            delete (this->esp);
 //            delete (this->ota);
+//        }
+//
+//        void addSerial(){
+//            this->serial = new SerialDebug(&this);
+//        }
+//
+//        void addFileSystem(){
+//            this->fileSystem = new FileSystem(&this);
+//        }
+//
+//        void addWifiManager(){
+//            this->wifiManager = new WifiManager(&this);
+//        }
+//
+//        void addMDNS(){
+//            this->mdns = new MDNSManager(&this);
+//        }
+//
+//        void addFTP(){
+//            this->ftpServer = new FTP(&this);
+//        }
+//
+//        void addWebServer(){
+//            this->webServer = new WebServer(&this);
+//        }
+//
+//        void addWebSocket(){
+//            this->webSocket = new WebSocket(&this);
+//        }
+//
+//        void addWebEvents(){
+//            this->webEvents = new WebEvents(&this);
+//        }
+//
+//        void addNTP(){
+//            this->ntp = new NTP(&this);
+//        }
+//
+//        void addESPInfos(){
+//            this->esp = new ESPInfos(&this);
+//        }
+//
+//        void addOTA(){
+//            this->ota = new OTA(&this);
 //        }
 //
 //
@@ -122,19 +167,17 @@ namespace WiFi_Portail_API {
 //    public:
 //        SerialDebug *serial;
 //        FileSystem *fileSystem;
-//        WifiManager *wifi;
-//        MDNS *mdns;
+//        WifiManager *wifiManager;
+//        MDNSManager *mdns;
 //        FTP *ftpServer;
 //        WebServer *webServer;
 //        WebSocket *webSocket;
 //        WebEvents *webEvents;
 //        NTP *ntp;
-//        ESPInfo *esp;
+//        ESPInfos *esp;
 //        OTA *ota;
-//
-//    private:
+
     };
 }
-extern WiFi_Portail_API::TBD_WiFi_Portail WiFi_Portail;
 
 #endif //TBD_WIFI_PORTAIL_H
