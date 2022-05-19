@@ -105,7 +105,7 @@ namespace WiFi_Portail_API {
 
         String getDNSServer() const;
 
-        void setDNSServer(const String &_DNSServer);
+        void setDNSServer(const String &DNS_Server);
 
         String getGateway() const;
 
@@ -140,14 +140,14 @@ namespace WiFi_Portail_API {
     class WifiAll {
     public:
         // constructor
-        WifiAll(const String &hostname = ("ESP_" + WiFi.macAddress()),
+        explicit WifiAll(const String &hostname = ("ESP_" + WiFi.macAddress()),
                 const String &mdnsName = ("ESP_" + WiFi.macAddress()));
 
-        WifiAll(const String &hostname, const String &mdnsName, const AP ap);
+        WifiAll(const String &hostname, const String &mdnsName, const AP& ap);
 
-        WifiAll(const String &hostname, const String &mdnsName, const AP ap, bool resetWifi);
+        WifiAll(const String &hostname, const String &mdnsName, const AP& ap, bool resetWifi);
 
-        WifiAll(const String &hostname, const String &mdnsName, const AP ap, WiFiMode_t mode, bool resetWifi);
+        WifiAll(const String &hostname, const String &mdnsName, const AP& ap, WiFiMode_t mode, bool resetWifi);
 
         WifiAll(const String &hostname, const String &mdnsName, std::vector <STA> &allSTA);
 
@@ -156,14 +156,14 @@ namespace WiFi_Portail_API {
         WifiAll(const String &hostname, const String &mdnsName, std::vector <STA> &allSTA, WiFiMode_t mode,
                 bool resetWifi);
 
-        WifiAll(const String &hostname, const String &mdnsName, const AP ap, std::vector <STA> &allSTA);
+        WifiAll(const String &hostname, const String &mdnsName, const AP& ap, std::vector <STA> &allSTA);
 
-        WifiAll(const String &hostname, const String &mdnsName, const AP ap, std::vector <STA> &allSTA,
+        WifiAll(const String &hostname, const String &mdnsName, const AP& ap, std::vector <STA> &allSTA,
                 WiFiMode_t mode);
 
-        WifiAll(const String &hostname, const String &mdnsName, const AP ap, std::vector <STA> &allSTA, bool resetWifi);
+        WifiAll(const String &hostname, const String &mdnsName, const AP& ap, std::vector <STA> &allSTA, bool resetWifi);
 
-        WifiAll(const String &hostname, const String &mdnsName, const AP ap, std::vector <STA> &allSTA, WiFiMode_t mode,
+        WifiAll(const String &hostname, const String &mdnsName, const AP& ap, std::vector <STA> &allSTA, WiFiMode_t mode,
                 bool resetWifi);
 
         // destructor
@@ -184,7 +184,7 @@ namespace WiFi_Portail_API {
 
         AP *getAP();
 
-        void setAP(const AP _ap);
+        void setAP(const AP& _ap);
 
         std::vector <STA> *getAllSTA();
 

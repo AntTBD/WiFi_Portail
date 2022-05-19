@@ -5,13 +5,10 @@
 #ifndef TBD_WIFI_PORTAIL_WEBSOCKET_H
 #define TBD_WIFI_PORTAIL_WEBSOCKET_H
 
-#include <Arduino.h>
 #include "TBD_WiFi_Portail.h"
-#include "Service.h"
-#include "TBD_WiFi_Portail_SerialDebug.h"
+#include "Services/Service.h"
 #include "TBD_WiFi_Portail_WebServer.h"
 #include "TBD_WiFi_Portail_WebEvents.h"
-//#include "TBD_WiFi_Portail_Wifi.h"
 
 #include <ESPAsyncTCP.h>       // https://github.com/me-no-dev/ESPAsyncTCP
 #include <ESPAsyncWebServer.h> // https://github.com/me-no-dev/ESPAsyncWebServer
@@ -50,15 +47,11 @@ namespace WiFi_Portail_API {
 
     class WebSocket {
     public:
-        WebSocket(SerialDebug &serialDebug, WebServer &webServer /*, WebSocketWifi& wifi*/, const String &root = "/ws");
+        WebSocket(WebServer &webServer, const String &root = "/ws");
 
         ~WebSocket();
 
         void addWebEvents(WebEvents &webEvents);
-
-        void addNTP(Service &ntp);
-
-        void addESPInfos(Service &espInfos);
 
         void addCommand(const char *commandNameIn, const char *commandNameOut, HandlerFunctionWebSocket onCommand);
 
@@ -100,12 +93,8 @@ namespace WiFi_Portail_API {
         AsyncWebSocket *webSocket;
 
     private:
-        SerialDebug *_serialDebug;
         WebServer *_webServer;
         WebEvents *_webEvents;
-        //_wifiManager* _wifiManager;
-        Service *_ntp;
-        Service *_espInfos;
 
         String _root;
         std::vector <PathMethodOnRequestWebSocket> *_allCommands;

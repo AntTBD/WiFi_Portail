@@ -106,28 +106,62 @@ namespace WiFi_Portail_API {
     */
 
     String AP::toString() const { //.c_str()
-        String result = (String) F("  -------- AP ---------") + F("\n") +
-                        F("  - ssid:        ") + String(this->ssid) + F("\n") +
-                        F("  - password:    ") + String(this->password) + F("\n") +
-                        F("  - hide:        ") + (this->hide ? F("true") : F("false")) + F("\n") +
-                        F("  - ip:          ") + String(this->ip) + F("\n") +
-                        F("  - mask:        ") + String(this->mask) + F("\n") +
-                        F("  - autoDisable: ") + String(this->autoDisable) + F(" min") + F("\n") +
-                        F("  - connected: ") + (this->connected ? F("true") : F("false")) + F("\n") +
-                        F("  ---------------------");
+        String result;
+        result.reserve(300);
+        result += F("  -------- AP ---------");
+        result += F("\n");
+        result += F("  - ssid:        ");
+        result += this->ssid;
+        result += F("\n");
+        result += F("  - password:    ");
+        result += this->password;
+        result += F("\n");
+        result += F("  - hide:        ");
+        result += this->hide ? F("true") : F("false");
+        result += F("\n");
+        result += F("  - ip:          ");
+        result += this->ip;
+        result += F("\n");
+        result += F("  - mask:        ");
+        result += this->mask;
+        result += F("\n");
+        result += F("  - autoDisable: ");
+        result += this->autoDisable;
+        result += F(" min");
+        result += F("\n");
+        result += F("  - connected: ");
+        result += this->connected ? F("true") : F("false");
+        result += F("\n");
+        result += F("  ---------------------");
         return result;
     }
 
     String AP::serialized() const {
-        String result = (String) F("{\n") +
-                        F("\"ssid\":\"") + String(this->ssid) + F("\",\n") +
-                        F("\"password\":\"") + String(this->password) + F("\",\n") +
-                        F("\"hide\":") + (this->hide ? F("true") : F("false")) + F(",\n") +
-                        F("\"ip\":\"") + String(this->ip) + F("\",\n") +
-                        F("\"mask\":\"") + String(this->mask) + F("\",\n") +
-                        F("\"autoDisable\":") + String(this->autoDisable) + F(",\n") +
-                        F("\"connected\":") + (this->connected ? F("true") : F("false")) + F("\n") +
-                        F("}");
+        String result;
+        result.reserve(150);
+        result += F("{\n");
+        result += F("\"ssid\":\"");
+        result += this->ssid;
+        result += F("\",\n");
+        result += F("\"password\":\"");
+        result += this->password;
+        result += F("\",\n");
+        result += F("\"hide\":");
+        result += this->hide ? F("true") : F("false");
+        result += F(",\n");
+        result += F("\"ip\":\"");
+        result += this->ip;
+        result += F("\",\n");
+        result += F("\"mask\":\"");
+        result += this->mask;
+        result += F("\",\n");
+        result += F("\"autoDisable\":");
+        result += this->autoDisable;
+        result += F(",\n");
+        result += F("\"connected\":");
+        result += this->connected ? F("true") : F("false");
+        result += F("\n");
+        result += F("}");
         return result;
     }
 
@@ -213,8 +247,8 @@ namespace WiFi_Portail_API {
         return DNSServer;
     }
 
-    void STA::setDNSServer(const String &_DNSServer) {
-        this->DNSServer = _DNSServer;
+    void STA::setDNSServer(const String &DNS_Server) {
+        this->DNSServer = DNS_Server;
     }
 
     String STA::getGateway() const {
@@ -257,32 +291,74 @@ namespace WiFi_Portail_API {
     }
     */
     String STA::toString() const { //.c_str()
-        String result = (String) F("  -------- STA ---------") + F("\n") +
-                        F("  - ssid:        ") + String(this->ssid) + F("\n") +
-                        F("  - password:    ") + String(this->password) + F("\n") +
-                        F("  - useDHCP:     ") + (this->useDHCP ? F("true") : F("false")) + F("\n") +
-                        F("  - ip:          ") + String(this->ip) + F("\n") +
-                        F("  - mask:        ") + String(this->mask) + F("\n") +
-                        F("  - DNSServer:   ") + String(this->DNSServer) + F("\n") +
-                        F("  - gateway:     ") + String(this->gateway) + F("\n") +
-                        F("  - autoDisable: ") + String(this->autoDisable) + F(" min") + F("\n") +
-                        F("  - connected: ") + (this->connected ? F("true") : F("false")) + F("\n") +
-                        F("  ---------------------");
+        String result;
+        result.reserve(300);
+        result += F("  -------- STA ---------");
+        result += F("\n");
+        result += F("  - ssid:        ");
+        result += this->ssid;
+        result += F("\n");
+        result += F("  - password:    ");
+        result += this->password;
+        result += F("\n");
+        result += F("  - useDHCP:     ");
+        result += (this->useDHCP ? F("true") : F("false"));
+        result += F("\n");
+        result += F("  - ip:          ");
+        result += this->ip;
+        result += F("\n");
+        result += F("  - mask:        ");
+        result += this->mask;
+        result += F("\n");
+        result += F("  - DNSServer:   ");
+        result += this->DNSServer;
+        result += F("\n");
+        result += F("  - gateway:     ");
+        result += this->gateway;
+        result += F("\n");
+        result += F("  - autoDisable: ");
+        result += this->autoDisable;
+        result += F(" min");
+        result += F("\n");
+        result += F("  - connected: ");
+        result += (this->connected ? F("true") : F("false"));
+        result += F("\n");
+        result += F("  ---------------------");
         return result;
     }
 
     String STA::serialized() const {
-        String result = (String) F("{\n") +
-                        F("\"ssid\":\"") + String(this->ssid) + F("\",\n") +
-                        F("\"password\":\"") + String(this->password) + F("\",\n") +
-                        F("\"useDHCP\":") + (this->useDHCP ? F("true") : F("false")) + F(",\n") +
-                        F("\"ip\":\"") + String(this->ip) + F("\",\n") +
-                        F("\"mask\":\"") + String(this->mask) + F("\",\n") +
-                        F("\"DNSServer\":\"") + String(this->DNSServer) + F("\",\n") +
-                        F("\"gateway\":\"") + String(this->gateway) + F("\",\n") +
-                        F("\"autoDisable\":") + String(this->autoDisable) + F(",\n") +
-                        F("\"connected\":") + (this->connected ? F("true") : F("false")) + F("\n") +
-                        F("}");
+        String result;
+        result.reserve(200);
+        result += F("{\n");
+        result += F("\"ssid\":\"");
+        result += this->ssid;
+        result += F("\",\n");
+        result += F("\"password\":\"");
+        result += this->password;
+        result += F("\",\n");
+        result += F("\"useDHCP\":");
+        result += (this->useDHCP ? F("true") : F("false"));
+        result += F(",\n");
+        result += F("\"ip\":\"");
+        result += this->ip;
+        result += F("\",\n");
+        result += F("\"mask\":\"");
+        result += this->mask;
+        result += F("\",\n");
+        result += F("\"DNSServer\":\"");
+        result += this->DNSServer;
+        result += F("\",\n");
+        result += F("\"gateway\":\"");
+        result += this->gateway;
+        result += F("\",\n");
+        result += F("\"autoDisable\":");
+        result += this->autoDisable;
+        result += F(",\n");
+        result += F("\"connected\":");
+        result += (this->connected ? F("true") : F("false"));
+        result += F("\n");
+        result += F("}");
         return result;
     }
 
@@ -295,7 +371,7 @@ namespace WiFi_Portail_API {
         this->resetWifi = false;
     }
 
-    WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap) {
+    WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP& ap) {
         this->hostname = hostname;
         this->mdnsName = mdnsName;
         this->mode = WIFI_OFF;
@@ -304,7 +380,7 @@ namespace WiFi_Portail_API {
         this->resetWifi = false;
     }
 
-    WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap, bool resetWifi) {
+    WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP& ap, bool resetWifi) {
         this->hostname = hostname;
         this->mdnsName = mdnsName;
         this->mode = WIFI_OFF;
@@ -313,7 +389,7 @@ namespace WiFi_Portail_API {
         this->resetWifi = resetWifi;
     }
 
-    WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap, WiFiMode_t mode, bool resetWifi) {
+    WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP& ap, WiFiMode_t mode, bool resetWifi) {
         this->hostname = hostname;
         this->mdnsName = mdnsName;
         this->mode = mode;
@@ -350,7 +426,7 @@ namespace WiFi_Portail_API {
         this->resetWifi = resetWifi;
     }
 
-    WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap, std::vector <STA> &allSTA) {
+    WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP& ap, std::vector <STA> &allSTA) {
         this->hostname = hostname;
         this->mdnsName = mdnsName;
         this->mode = WIFI_OFF;
@@ -359,7 +435,7 @@ namespace WiFi_Portail_API {
         this->resetWifi = false;
     }
 
-    WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap, std::vector <STA> &allSTA,
+    WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP& ap, std::vector <STA> &allSTA,
                      WiFiMode_t mode) {
         this->hostname = hostname;
         this->mdnsName = mdnsName;
@@ -369,7 +445,7 @@ namespace WiFi_Portail_API {
         this->resetWifi = false;
     }
 
-    WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap, std::vector <STA> &allSTA,
+    WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP& ap, std::vector <STA> &allSTA,
                      bool resetWifi) {
         this->hostname = hostname;
         this->mdnsName = mdnsName;
@@ -379,7 +455,7 @@ namespace WiFi_Portail_API {
         this->resetWifi = resetWifi;
     }
 
-    WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP ap, std::vector <STA> &allSTA,
+    WifiAll::WifiAll(const String &hostname, const String &mdnsName, const AP& ap, std::vector <STA> &allSTA,
                      WiFiMode_t mode, bool resetWifi) {
         this->hostname = hostname;
         this->mdnsName = mdnsName;
@@ -422,7 +498,7 @@ namespace WiFi_Portail_API {
         return this->ap;
     }
 
-    void WifiAll::setAP(const AP _ap) {
+    void WifiAll::setAP(const AP& _ap) {
         *this->ap = _ap;
     }
 
@@ -464,29 +540,52 @@ ostream &operator<<(ostream &os, WifiAll &all) {
 */
     String WifiAll::toString() const //.c_str()
     {
-        String result = (String) F("---------- WifiAll ---------") + F("\n") +
-                        F("hostname:         ") + String(this->hostname) + F("\n") +
-                        F("mdnsName:         ") + String(this->mdnsName) + F("\n") +
-                        F("mode:             ") + String(this->mode) + F("\n") +
-                        F("AP: ") + F("\n") +
-                        this->ap->toString() + F("\n") +
-                        F("All STA: ") + F("\n");
+        String result;
+        result += F("---------- WifiAll ---------");
+        result += F("\n");
+        result += F("hostname:         ");
+        result += this->hostname;
+        result += F("\n");
+        result += F("mdnsName:         ");
+        result += this->mdnsName;
+        result += F("\n");
+        result += F("mode:             ");
+        result += this->mode;
+        result += F("\n");
+        result += F("AP: ");
+        result += F("\n");
+        result += this->ap->toString();
+        result += F("\n");
+        result += F("All STA: ");
+        result += F("\n");
+
         for (STA &sta: *this->allSTA) {
-            result += sta.toString() + F("\n");
+            result += sta.toString();
+            result+= F("\n");
         }
-        result += (String) F("resetWifi: ") + (this->resetWifi ? F("true") : F("false")) + F("\n") +
-                  F("----------------------------");
+        result += F("resetWifi: ");
+        result += this->resetWifi ? F("true") : F("false");
+        result += F("\n");
+        result += F("----------------------------");
         return result;
     }
 
     String WifiAll::serialized() const {
-        String result = (String) F("{\n") +
-                        F("\"hostname\":\"") + String(this->hostname) + F("\",\n") +
-                        F("\"mdnsName\":\"") + String(this->mdnsName) + F("\",\n") +
-                        F("\"mode\":\"") + String(this->mode) + F("\",\n") +
-                        F("\"AP\":\n") +
-                        this->ap->serialized() + F(",\n") +
-                        F("\"allSTA\":[\n");
+        String result;
+        result += F("{\n");
+        result += F("\"hostname\":\"");
+        result += this->hostname;
+        result += F("\",\n");
+        result += F("\"mdnsName\":\"");
+        result += this->mdnsName;
+        result += F("\",\n");
+        result += F("\"mode\":\"");
+        result += this->mode;
+        result += F("\",\n");
+        result += F("\"AP\":\n");
+        result += this->ap->serialized();
+        result += F(",\n");
+        result += F("\"allSTA\":[\n");
         unsigned int i = 0;
         for (STA &sta: *this->allSTA) {
             i++;
@@ -496,28 +595,35 @@ ostream &operator<<(ostream &os, WifiAll &all) {
             }
             result += F("\n");
         }
-        result += (String) F("],\n") +
-                  F("\"resetWifi\":") + (this->resetWifi ? F("true") : F("false")) + F("\n") +
-                  F("}\n");
+        result += F("],\n");
+        result += F("\"resetWifi\":");
+        result += this->resetWifi ? F("true") : F("false");
+        result += F("\n");
+        result += F("}\n");
 
         return result;
     }
 
     String WifiAll::serializedForSend() const {
-        String result = (String) F("{") +
-                        F("\"mode\":\"") + String(this->mode) + F("\",") +
-                        F("\"AP\":") + this->ap->serialized() + F(",") +
-                        F("\"allSTA\":[");
+        String result;
+        result += F("{");
+        result += F("\"mode\":\"");
+        result += this->mode;
+        result += F("\",");
+        result += F("\"AP\":");
+        result += this->ap->serialized();
+        result += F(",");
+        result += F("\"allSTA\":[");
         int i = 0;
         for (STA &sta: *this->allSTA) {
             i++;
             result += sta.serialized();
             if (i != this->allSTA->size()) {
-                result += (String) F(",");
+                result += F(",");
             }
         }
-        result += (String) F("]") +
-                  F("}");
+        result += F("]");
+        result += F("}");
         //Serial.println("serializedForSend");
         //Serial.println(result);
         return result;

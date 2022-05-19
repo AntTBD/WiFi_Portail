@@ -5,11 +5,8 @@
 #ifndef TBD_WIFI_PORTAIL_MDNS_H
 #define TBD_WIFI_PORTAIL_MDNS_H
 
-#include <Arduino.h>
 #include "TBD_WiFi_Portail.h"
 #ifdef USE_MDNS
-#include "TBD_WiFi_Portail_SerialDebug.h"
-#include "TBD_WiFi_Portail_Wifi.h"
 
 #include <ESP8266mDNS.h>
 
@@ -19,11 +16,11 @@
 namespace WiFi_Portail_API {
 
 
-    class MDNSManager {
+    class MDNSManagerClass {
     public:
-        MDNSManager(SerialDebug &serialDebug, WifiManager &_wifiManager);
+        MDNSManagerClass();
 
-        ~MDNSManager();
+        ~MDNSManagerClass();
 
         void begin();
 
@@ -37,11 +34,18 @@ namespace WiFi_Portail_API {
 
         String toString() const;
 
+        bool isUpdatingMDNSInThisClass() const;
+
+        void setUpdatingMDNSInThisClass(bool updateMDNSInThisClass);
+
     private:
-        SerialDebug *_serialDebug;
-        WifiManager *_wifiManager;
-        bool _updateMDNS;
+
+        bool _updateMDNSInThisClass;
+
+
     };
+
+    extern MDNSManagerClass MDNSManager;
 }
 #endif // USE_MDNS
 

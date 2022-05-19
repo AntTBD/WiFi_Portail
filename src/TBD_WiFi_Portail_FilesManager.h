@@ -5,14 +5,14 @@
 #ifndef TBD_WIFI_PORTAIL_FILESMANAGER_H
 #define TBD_WIFI_PORTAIL_FILESMANAGER_H
 
-#include <Arduino.h>
 #include "TBD_WiFi_Portail.h"
-#include "TBD_WiFi_Portail_SerialDebug.h"
-#include "TBD_WiFi_Portail_FileSystem.h"
-#include "TBD_WiFi_Portail_Wifi.h"
+#ifdef USE_FTP
 #include "TBD_WiFi_Portail_FTP.h"
+#endif // USE_FTP
 #include "TBD_WiFi_Portail_Package.h"
+#ifdef USE_OTA
 #include "TBD_WiFi_Portail_OTA.h"
+#endif // USE_OTA
 
 #include <ArduinoJson.h>
 // JSON JavaScript Object Notation
@@ -25,24 +25,19 @@
 
 namespace WiFi_Portail_API {
 
-    enum File_Type {
-        package,
-        configAllWifi,
-        configFTP,
-        configOTA
-    };
-
-    class FilesManager {
+    class FilesManagerClass {
     public:
-        FilesManager(SerialDebug &serialDebug, FileSystem &fileSystem);
 
-        ~FilesManager();
+        enum File_Type {
+            package,
+            configAllWifi,
+            configFTP,
+            configOTA
+        };
 
-        void add(WifiManager &wifiManager);
+        FilesManagerClass();
 
-        void add(FTP &ftpSrvLogin);
-
-        void add(OTA &ota);
+        ~FilesManagerClass();
 
         void begin();
 
@@ -54,21 +49,20 @@ namespace WiFi_Portail_API {
 
         void loadConfigAllWifi(const String &filename, WifiAll *allWifi);
 
-        void loadConfigFTP(const String &filename, FTP *ftpSrvLogin);
+#ifdef USE_FTP
+        void loadConfigFTP(const String &filename);
+#endif // USE_FTP
 
-        void loadConfigOTA(const String &filename, OTA *ota);
+#ifdef USE_OTA
+        void loadConfigOTA(const String &filename);
+#endif // USE_OTA
 
         void saveConfigAllWifi();
 
         void printListOfConfigFiles();
 
     private:
-        SerialDebug *_serialDebug;
-        FileSystem *_fileSystem;
         Package *_package;
-        WifiManager *_wifiManager;
-        FTP *_ftpSrvLogin;
-        OTA *_ota;
 
         std::map<int, String> _listOfConfigFiles;
 
@@ -80,5 +74,7 @@ namespace WiFi_Portail_API {
 
         JsonObject getJSonFromFile(DynamicJsonDocument *doc, const String &filename);
     };
+
+    extern FilesManagerClass FilesManager;
 }
 #endif //TBD_WIFI_PORTAIL_FILESMANAGER_H

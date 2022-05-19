@@ -5,9 +5,11 @@
 #include "TBD_WiFi_Portail_FileSystem.h"
 
 namespace WiFi_Portail_API {
+    FileSystemClass FileSystem;
+
+
 // ---------------------------------- Start file system ------------------------------------------
-    FileSystem::FileSystem(SerialDebug &serialDebug, bool resetFileSystemAtStartup):
-     _resetFileSystemAtStartup(resetFileSystemAtStartup), _serialDebug(&serialDebug) {
+    FileSystemClass::FileSystemClass() {
 
 #if defined USE_SPIFFS
         this->fileSystem = &SPIFFS;
@@ -23,49 +25,48 @@ namespace WiFi_Portail_API {
         this->listOfFiles = std::vector<_Directory *>();
     }
 
-    FileSystem::~FileSystem() {
-        delete this->_serialDebug;
-
+    FileSystemClass::~FileSystemClass() {
         delete this->fileSystem;
         //delete this->_fileSystemConfig;
 
         this->listOfFiles.clear();
     }
 
-    bool FileSystem::begin() {
-        this->_serialDebug->println(F("== Setup File Sytem =="));
+    bool FileSystemClass::begin(bool resetFileSystemAtStartup) {
+        SerialDebug_println(F("== Setup File Sytem =="));
+        this->_resetFileSystemAtStartup = resetFileSystemAtStartup;
 
         this->fileSystem->setConfig(this->_fileSystemConfig);
         bool fsOK = this->fileSystem->begin();
-        this->_serialDebug->println(fsOK ? F("File system initialized.") : F(
+        SerialDebug_println(fsOK ? F("File system initialized.") : F(
                 "Error file System:    File system init failed! (Failed to mount file system)"));
 
         if (!fsOK) {
             while (true) {
-                this->_serialDebug->print(F("."));
+                SerialDebug_print(F("."));
                 delay(1000);
             }
         }
 
         bool formatOK = false;
         if (this->_resetFileSystemAtStartup) {
-            this->_serialDebug->println(F("\nFormatting FILE SYSTEM !\nThose files will be deleted:"));
+            SerialDebug_println(F("\nFormatting FILE SYSTEM !\nThose files will be deleted:"));
             uint16_t nbrOfDir = this->getListOfAllFilesInMemory();
 
-            this->_serialDebug->println(F("\nStarting formatting FILE SYSTEM"));
+            SerialDebug_println(F("\nStarting formatting FILE SYSTEM"));
             uint32_t startTime = millis();
 
             formatOK = this->fileSystem->format(); // formatting of FILE SYSTEM memory
             if (formatOK) {
-                this->_serialDebug->print(F("Formatting completed, it took "));
-                this->_serialDebug->print(millis() - startTime);
-                this->_serialDebug->println(F(" ms!"));
+                SerialDebug_print(F("Formatting completed, it took "));
+                SerialDebug_print(millis() - startTime);
+                SerialDebug_println(F(" ms!"));
             } else {
-                this->_serialDebug->println(F("!!! Error during formatting !!!"));
+                SerialDebug_println(F("!!! Error during formatting !!!"));
             }
         }
 
-        this->_serialDebug->println(F("======================"));
+        SerialDebug_println(F("======================"));
 
         this->infos_FileSytem(); // print informations of the memory
 
@@ -73,23 +74,23 @@ namespace WiFi_Portail_API {
     }
 
 // --------------------------------------- List of files in memory -----------------------------------
-    uint16_t FileSystem::getListOfAllFilesInMemory() {
-        this->_serialDebug->println(F("List of files in memory:"));
+    uint16_t FileSystemClass::getListOfAllFilesInMemory() {
+        SerialDebug_println(F("List of files in memory:"));
 
         _Directory *newDir = new _Directory();
         newDir->name = F("/");
         this->listOfFiles.push_back(newDir);
 
         uint16_t fileCount = this->listDir(F("  "), F("/"), this->listOfFiles.at(0));
-        this->_serialDebug->print(fileCount);
-        this->_serialDebug->println(F(" files or folders in total"));
+        SerialDebug_print(fileCount);
+        SerialDebug_println(F(" files or folders in total"));
 
         return fileCount;
     }
 
 // --------------------------------------- liste des fichiers et autres dossier dans un dossier -----------------------------------
 // It is possible to create subfolders without exceeding the limit of 31 useful characters for the file path including the file name and its extension.
-    uint16_t FileSystem::listDir(const String &indent, const String &path, _Directory *newDir) {
+    uint16_t FileSystemClass::listDir(const String &indent, const String &path, _Directory *newDir) {
         uint16_t dirCount = 0;
         Dir dir = this->fileSystem->openDir(path);
 
@@ -97,30 +98,30 @@ namespace WiFi_Portail_API {
             ++dirCount;
             if (dir.isDirectory()) {
                 // add dir in list
-                _Directory *newDir2 = new _Directory();
+                auto *newDir2 = new _Directory();
                 newDir2->name = dir.fileName().c_str();
 
-                this->_serialDebug->print(indent.c_str());
-                this->_serialDebug->print(F("+ "));
-                this->_serialDebug->print(dir.fileName().c_str());
-                this->_serialDebug->println(F(" [Dir]"));
+                SerialDebug_print(indent.c_str());
+                SerialDebug_print(F("+ "));
+                SerialDebug_print(dir.fileName().c_str());
+                SerialDebug_println(F(" [Dir]"));
                 dirCount += this->listDir(indent + F("   "), path + dir.fileName() + F("/"), newDir2);
 
                 newDir->childrenDirectories.push_back(newDir2);
             } else {
                 // add file to the list
-                _File *newFile = new _File();
+                auto *newFile = new _File();
                 newFile->name = dir.fileName().c_str();
                 newFile->size = dir.fileSize();
 
-                this->_serialDebug->print(indent.c_str());
-                this->_serialDebug->print(F("  "));
-                this->_serialDebug->printf(F("%-16s"), dir.fileName().c_str());
-                this->_serialDebug->print(F(" ("));
-                //this->_serialDebug->printf("%ld",(uint32_t)dir.fileSize());
-                //this->_serialDebug->println(F(" Bytes)"));
-                this->_serialDebug->print(this->formatBytes(dir.fileSize()));
-                this->_serialDebug->println(F(")"));
+                SerialDebug_print(indent.c_str());
+                SerialDebug_print(F("  "));
+                SerialDebug_printf(F("%-16s"), dir.fileName().c_str());
+                SerialDebug_print(F(" ("));
+                //SerialDebug_printf("%ld",(uint32_t)dir.fileSize());
+                //SerialDebug_println(F(" Bytes)"));
+                SerialDebug_print(this->formatBytes(dir.fileSize()));
+                SerialDebug_println(F(")"));
 
                 newDir->childrenFiles.push_back(newFile);
             }
@@ -129,72 +130,73 @@ namespace WiFi_Portail_API {
     }
 
 // ----------------------------------------- serialised list of directories/files ----------------------------
-    String FileSystem::getFilesListJson() const {
-        String result = (String) F("{\"list\":") + F("[");
+    String FileSystemClass::getFilesListJson() const {
+        String result = F("{\"list\":");
+        result += F("[");
         int i = 0;
         for (_Directory *dir: this->listOfFiles) {
             i++;
             result += dir->serialized();
             if (i != this->listOfFiles.size()) {
-                result += (String) F(",");
+                result += F(",");
             }
         }
-        result += (String) F("]}");
+        result += F("]}");
         return result;
     }
 
 // ----------------------------------------- info on FileSytem memory for DEBUG ----------------------------
-    void FileSystem::infos_FileSytem() {
-        this->_serialDebug->println();
-        this->_serialDebug->println(F("==========================================="));
-        this->_serialDebug->println(F("       FileSytem ESP8266 INFORMATIONS"));
-        this->_serialDebug->println(F("==========================================="));
+    void FileSystemClass::infos_FileSytem() {
+        SerialDebug_println();
+        SerialDebug_println(F("==========================================="));
+        SerialDebug_println(F("       FileSytem ESP8266 INFORMATIONS"));
+        SerialDebug_println(F("==========================================="));
 
         FSInfo fsInfo;
         this->fileSystem->info(fsInfo);             // info fs
         float total = (fsInfo.totalBytes / 1024.0); // fsInfo.totalBytes
-        this->_serialDebug->print(F("info totalbytes :    "));
-        //  this->_serialDebug->print(total);
-        //  this->_serialDebug->println(F(" ko"));
-        this->_serialDebug->println(this->formatBytes(total));
-        this->_serialDebug->print(F("info usedbytes :     "));
-        //  this->_serialDebug->print((float)(fsInfo.usedBytes/1024.0));
-        //  this->_serialDebug->println(F(" ko"));
-        this->_serialDebug->println(this->formatBytes(fsInfo.usedBytes));
-        this->_serialDebug->print(F("info blocksize :     "));
-        this->_serialDebug->println(fsInfo.blockSize);
-        this->_serialDebug->print(F("info pagesize:       "));
-        this->_serialDebug->println(fsInfo.pageSize);
-        this->_serialDebug->print(F("info maxOpenFiles :  "));
-        this->_serialDebug->println(fsInfo.maxOpenFiles);
-        this->_serialDebug->print(F("info maxPathLength : "));
-        this->_serialDebug->print(fsInfo.maxPathLength);
-        this->_serialDebug->println(F(" characters"));
+        SerialDebug_print(F("info totalbytes :    "));
+        //  SerialDebug_print(total);
+        //  SerialDebug_println(F(" ko"));
+        SerialDebug_println(this->formatBytes(total));
+        SerialDebug_print(F("info usedbytes :     "));
+        //  SerialDebug_print((float)(fsInfo.usedBytes/1024.0));
+        //  SerialDebug_println(F(" ko"));
+        SerialDebug_println(this->formatBytes(fsInfo.usedBytes));
+        SerialDebug_print(F("info blocksize :     "));
+        SerialDebug_println(fsInfo.blockSize);
+        SerialDebug_print(F("info pagesize:       "));
+        SerialDebug_println(fsInfo.pageSize);
+        SerialDebug_print(F("info maxOpenFiles :  "));
+        SerialDebug_println(fsInfo.maxOpenFiles);
+        SerialDebug_print(F("info maxPathLength : "));
+        SerialDebug_print(fsInfo.maxPathLength);
+        SerialDebug_println(F(" characters"));
 
-        this->_serialDebug->println();
+        SerialDebug_println();
 
         uint16_t nbrOfDir = this->getListOfAllFilesInMemory(); // get list of files in memory
 
-        this->_serialDebug->println(F("\n===========================================\n"));
+        SerialDebug_println(F("\n===========================================\n"));
 
         if (nbrOfDir == 0) {
-            this->_serialDebug->println(F("No files in FileSystem !!!"));
-            this->_serialDebug->println(F("Waiting..."));
+            SerialDebug_println(F("No files in FileSystem !!!"));
+            SerialDebug_println(F("Waiting..."));
             for (;;) {
-                this->_serialDebug->print(F("."));
+                SerialDebug_print(F("."));
                 delay(1000);
             }
         }
     }
 
 // ----------------------------- close filesystem ------------------------------------------------
-    void FileSystem::filesytem_end() {
+    void FileSystemClass::filesytem_end() {
         //debug_to_WSEvents(F("End of fileSystem"), eventType.warn);//anto
         this->fileSystem->end();
     }
 
 // ----------------------- format bytes ----------------------------------------------------
-    String FileSystem::formatBytes(size_t bytes) const {
+    String FileSystemClass::formatBytes(size_t bytes) const {
         if (bytes < 1024) {
             return String(bytes) + F(" B");
         } else if (bytes < (1024 * 1024)) {

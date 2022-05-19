@@ -5,11 +5,11 @@
 #ifndef TBD_WIFI_PORTAIL_PACKAGE_H
 #define TBD_WIFI_PORTAIL_PACKAGE_H
 
-#include <Arduino.h>
 #include "TBD_WiFi_Portail.h"
+#include "Incopiable.h"
 
 namespace WiFi_Portail_API {
-    class Package {
+    class Package : Singleton<Package> {
     public:
         Package();
 
@@ -42,6 +42,9 @@ namespace WiFi_Portail_API {
         String toString() const;
 
     private:
+        // sans ceci, le parent ne peut instancier son enfant
+        friend class Singleton<Package>;
+
         String nameProject;
         String versionProject;
         String description;

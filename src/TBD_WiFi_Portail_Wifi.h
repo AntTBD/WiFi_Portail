@@ -5,10 +5,7 @@
 #ifndef TBD_WIFI_PORTAIL_WIFI_H
 #define TBD_WIFI_PORTAIL_WIFI_H
 
-#include <Arduino.h>
 #include "TBD_WiFi_Portail.h"
-#include "TBD_WiFi_Portail_SerialDebug.h"
-//#include "TBD_WiFi_Portail_FilesManager.h"
 #include "WifiAll.h"
 
 #include <ESP8266WiFi.h> //ESP8266 Core WiFi Library (you most likely already have this in your sketch)
@@ -17,14 +14,13 @@
 #include <ArduinoJson.h>
 namespace WiFi_Portail_API {
 
-    class WifiManager {
+    class WifiManagerClass {
     public:
-        WifiManager(SerialDebug &serialDebug /*, FilesManager& _filesManager*/, WiFiMode_t startMode = WIFI_STA,
-             bool resetWifi = false);
+        WifiManagerClass();
 
-        ~WifiManager();
+        ~WifiManagerClass();
 
-        void begin();
+        void begin(WiFiMode_t startMode = WIFI_STA, bool resetWifi = false);
 
         void onWifiConnect(const WiFiEventStationModeConnected &event);
 
@@ -56,8 +52,6 @@ namespace WiFi_Portail_API {
         WifiAll *wifiAll; // max 10 STA
 
     private:
-        SerialDebug *_serialDebug;
-        //FilesManager* _filesManager;
 
         // ------------------- wifi config -----------------
         ESP8266WiFiMulti _wifiMulti;
@@ -71,5 +65,7 @@ namespace WiFi_Portail_API {
         // ------------- event listeners ------------
         WiFiEventHandler _wifiDisconnectHandler, _wifiConnectHandler, _wifiOnStationModeGotIPHandler;
     };
+
+    extern WifiManagerClass WifiManager;
 }
 #endif //TBD_WIFI_PORTAIL_WIFI_H

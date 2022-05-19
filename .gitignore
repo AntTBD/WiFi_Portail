@@ -43,3 +43,8 @@
 
 # test lib
 examples/setting_page_test_lib/data
+
+
+/cmake-build-debug/
+
+CMakeLists.txt

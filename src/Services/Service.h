@@ -5,6 +5,7 @@
 #ifndef SERVICE_H
 #define SERVICE_H
 
+//#include "../Incopiable.h"
 #include <Arduino.h>
 
 #include <ArduinoJson.h>
@@ -26,5 +27,6 @@ namespace WiFi_Portail_API {
 
     };
 }
+#include "../TBD_WiFi_Portail.h"
 
 #endif //SERVICE_H

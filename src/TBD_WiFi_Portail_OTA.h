@@ -5,11 +5,8 @@
 #ifndef TBD_WIFI_PORTAIL_OTA_H
 #define TBD_WIFI_PORTAIL_OTA_H
 
-#include <Arduino.h>
 #include "TBD_WiFi_Portail.h"
 #ifdef USE_OTA
-#include "TBD_WiFi_Portail_SerialDebug.h"
-#include "TBD_WiFi_Portail_FileSystem.h"
 #include "TBD_WiFi_Portail_WebEvents.h"
 #include "TBD_WiFi_Portail_MDNS.h"
 
@@ -20,15 +17,14 @@
 
 namespace WiFi_Portail_API {
 
-    class OTA {
+    class OTAManagerClass {
     public:
-        OTA(SerialDebug &serialDebug, FileSystem &fileSystem, String hostname = "user_OTA", String password = "password_OTA");
+        OTAManagerClass();
 
-        ~OTA();
+        ~OTAManagerClass();
 
+        // Add web events to have ability to informe client during ota update
         void addWebEvents(WebEvents &webEvents);
-
-        void addMDNS(MDNSManager &mdns);
 
         void setHostname(const String &hostname);
 
@@ -44,7 +40,7 @@ namespace WiFi_Portail_API {
 
         String toString() const;
 
-        void begin();
+        void begin(String hostname = "user_OTA", String password = "password_OTA");
 
         void loop();
 
@@ -61,10 +57,8 @@ namespace WiFi_Portail_API {
         void arduinoOTAOnError(ota_error_t error);
 
     private:
-        SerialDebug *_serialDebug;
-        FileSystem *_fileSystem;
+
         WebEvents *_webEvents;
-        MDNSManager *_mdns;
         String _hostname;
         String _password;
         bool _arduinoOtaUseMDNS;
@@ -73,8 +67,8 @@ namespace WiFi_Portail_API {
         unsigned long previousMillisSendInfos = 0; // will store last time send informations was updated
         unsigned long intervalSendInfos = 1000;    // interval at which to send informations when update firmware by ota
 
-        //ArduinoOTAClass *_arduinoOTA;
     };
+    extern OTAManagerClass OTAManager;
 }
 #endif // USE_OTA
 

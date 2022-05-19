@@ -6,14 +6,10 @@
 #ifndef TBD_WIFI_PORTAIL_WEBSERVER_H
 #define TBD_WIFI_PORTAIL_WEBSERVER_H
 
-#include <Arduino.h>
 #include "TBD_WiFi_Portail.h"
-#include "Service.h"
-#include "TBD_WiFi_Portail_SerialDebug.h"
-#include "TBD_WiFi_Portail_FileSystem.h"
+#include "Services/Service.h"
 #include "TBD_WiFi_Portail_WebEvents.h"
 #include "TBD_WiFi_Portail_WebSocket.h"
-#include "TBD_WiFi_Portail_Wifi.h"
 
 // to get secure server (not work realy) https://github.com/me-no-dev/ESPAsyncWebServer/issues/392 or https://gitlab.users.ch.eu.org:10443/smarthome/eaws-ssl-updater
 
@@ -50,7 +46,7 @@ namespace WiFi_Portail_API {
 
     class WebServer {
     public:
-        WebServer(SerialDebug &serialDebug, FileSystem &fileSystem, WifiManager &wifiManager, int port);
+        WebServer(int port);
 
         ~WebServer();
 
@@ -60,10 +56,6 @@ namespace WiFi_Portail_API {
         void addWebEvents(WebEvents &webEvents);
 
         void addWebSocket(WebSocket &webSocket);
-
-        void addNTP(Service &ntp);
-
-        void addESPInfos(Service &espInfos);
 
         void begin();
 
@@ -98,15 +90,9 @@ namespace WiFi_Portail_API {
         // ------------------------------------------ Init Serveur Web ---------------------------------------------
         AsyncWebServer *server;
 
-        WifiManager *_wifiManager;
-        FileSystem *_fileSystem;
-
     private:
-        SerialDebug *_serialDebug;
         WebEvents *_webEvents;
         WebSocket *_webSocket;
-        Service *_ntp;
-        Service *_espInfos;
 
         int _port;
         std::vector <PathMethodOnRequest> *_allRoots;

@@ -5,6 +5,9 @@
 #include "TBD_WiFi_Portail_ESP.h"
 
 namespace WiFi_Portail_API {
+
+    ESPInfosClass ESPInfos;
+
 /*var message = {
         "softVersion": "V0.2",
         "statusInfos": {
@@ -33,39 +36,7 @@ namespace WiFi_Portail_API {
 };*/
 
 /// Constructor
-    ESPInfos::ESPInfos() : Service() {
-        /*this->_infosName = {
-                "esphead",
-                "uptime",
-                "chipid",
-                "fchipid",
-                "idesize",
-                "realsize",
-                "flashspeed",
-                "flashmode",// ///////
-                "sdkver",
-                "corever",
-                "bootver",
-                "cpufreq",
-                "freeheap",
-                "sketch",
-                "filesystem",
-                "lastreset",
-                "wifihead",
-                "wifimode",
-                "apip",
-                "apmac",
-                "apssid",
-                "apbssid",
-                "staip",
-                "stagw",
-                "stasub",
-                "dnss",
-                "host",
-                "stamac",
-                "conx",
-                "autoconx"
-        };*/
+    ESPInfosClass::ESPInfosClass() : Service() {
 
         this->_deviceStatus = new std::vector<String>();
         this->_deviceStatus->insert(this->_deviceStatus->end(), {
@@ -103,17 +74,10 @@ namespace WiFi_Portail_API {
                 F("conx"),
                 F("autoconx")
         });
-
-        this->_ntp = nullptr;
-        this->_fileSystem = nullptr;
     }
 
 /// Destructor
-    ESPInfos::~ESPInfos() {
-#ifdef USE_NTP
-        delete this->_ntp;
-#endif // USE_NTP
-        delete this->_fileSystem;
+    ESPInfosClass::~ESPInfosClass() {
 
         this->_deviceStatus->clear();
         delete this->_deviceStatus;
@@ -121,18 +85,9 @@ namespace WiFi_Portail_API {
         delete this->_networkStatus;
     }
 
-/// Add NTP class
-    void ESPInfos::addNTP(Service &ntp) {
-        this->_ntp = &ntp;
-    }
-
-/// Add FileSystem class
-    void ESPInfos::addFileSystem(FileSystem &fileSystem) {
-        this->_fileSystem = &fileSystem;
-    }
 
 /// Convert all infos to JSON sorted by devices datas and network datas
-    DynamicJsonDocument ESPInfos::getHardwareInfosJson2() {
+    DynamicJsonDocument ESPInfosClass::getHardwareInfosJson2() {
         DynamicJsonDocument docHardwareInfos(
                 JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(2)
                 + JSON_ARRAY_SIZE((this->_deviceStatus->size() + 1)) +
@@ -158,7 +113,7 @@ namespace WiFi_Portail_API {
         return docHardwareInfos;
     }
 
-    DynamicJsonDocument ESPInfos::getHardwareInfosJsonObj() {
+    DynamicJsonDocument ESPInfosClass::getHardwareInfosJsonObj() {
         DynamicJsonDocument doc(
                 JSON_OBJECT_SIZE(2)
                 + JSON_ARRAY_SIZE((this->_deviceStatus->size() + 1)) +
@@ -184,7 +139,7 @@ namespace WiFi_Portail_API {
     }
 
 /// Convert all infos to JSON and then to string
-    String ESPInfos::getHardwareInfosString2() {
+    String ESPInfosClass::getHardwareInfosString2() {
         String jsonStringHardwareInfos;
         jsonStringHardwareInfos.reserve(2000);
         serializeJsonPretty(this->getHardwareInfosJson2(),
@@ -194,13 +149,13 @@ namespace WiFi_Portail_API {
     }
 
 /// Return infos by string name
-    sNameValue ESPInfos::getInfoData2(const String &id) {
+    sNameValue ESPInfosClass::getInfoData2(const String &id) {
         sNameValue info;
 
         if (id == F("uptime")) {
             info.name = F("Uptime");
 #ifdef USE_NTP
-            if (this->_ntp != nullptr) info.value = this->_ntp->toString2();
+            info.value = NTPManager.toString2();
 #else // USE_NTP
             unsigned long millisecs = millis();
             info.value = (String)((millisecs / (1000 * 60 * 60 * 24)) % 365);
@@ -220,13 +175,11 @@ namespace WiFi_Portail_API {
             info.name = F("Flash Chip ID");
             info.value = (String) ESP.getFlashChipId();
         } else if (id == F("idesize")) {
-            info.name = F("Flash IDE  Size");
-            if (this->_fileSystem != nullptr) info.value = this->_fileSystem->formatBytes(ESP.getFlashChipSize());
-            else info.value = (String) ESP.getFlashChipSize();
+            info.name = F("Flash IDE Size");
+            info.value = FileSystem.formatBytes(ESP.getFlashChipSize());
         } else if (id == F("realsize")) {
             info.name = F("Flash Real Size");
-            if (this->_fileSystem != nullptr) info.value = this->_fileSystem->formatBytes(ESP.getFlashChipRealSize());
-            else info.value = (String) ESP.getFlashChipRealSize();
+            info.value = FileSystem.formatBytes(ESP.getFlashChipRealSize());
         } else if (id == F("flashspeed")) {
             info.name = F("Flash Speed");
             info.value = (String)(float(ESP.getFlashChipSpeed()) / 1000000);
@@ -234,11 +187,11 @@ namespace WiFi_Portail_API {
         } else if (id == F("flashmode")) {
             info.name = F("Flash Mode");
             FlashMode_t ideMode = ESP.getFlashChipMode();
-            info.value = (ideMode == FM_QIO ? "QIO"
-                                            : ideMode == FM_QOUT ? "QOUT"
-                                                                 : ideMode == FM_DIO ? "DIO"
-                                                                                     : ideMode == FM_DOUT ? "DOUT"
-                                                                                                          : "UNKNOWN");
+            info.value = (ideMode == FM_QIO ? F("QIO - Quad I/O Fast Read")
+                                            : ideMode == FM_QOUT ? F("QOUT - Quad Output Fast Read")
+                                                                 : ideMode == FM_DIO ? F("DIO - Dual I/O Fast Read")
+                                                                                     : ideMode == FM_DOUT ? F("DOUT - Dual Output Fast Read")
+                                                                                                          : F("UNKNOWN"));
         } else if (id == F("sdkver")) {
             info.name = F("SDK Version");
             info.value = (String) ESP.getSdkVersion();
@@ -255,10 +208,8 @@ namespace WiFi_Portail_API {
             info.value += F(" MHz");
         } else if (id == F("freeheap")) {
             info.name = F("Memory - Free Heap (RAM)");
-            if (this->_fileSystem != nullptr)
-                info.value = this->_fileSystem->formatBytes(ESP.getFreeHeap()) + F(" / ") +
-                             this->_fileSystem->formatBytes(32768);// 32768 = IRAM from compiler
-            else info.value = (String) ESP.getFreeHeap() + F(" / ") + String(32768) + F(" bytes");
+                info.value = FileSystem.formatBytes(ESP.getFreeHeap()) + F(" / ") +
+                        FileSystem.formatBytes(32768);// 32768 = IRAM from compiler
             info.value += F(" <i>(Available / Total)</i>");
             info.progress.value = (float) (ESP.getFreeHeap());
             info.progress.min = 0;
@@ -271,15 +222,12 @@ namespace WiFi_Portail_API {
             info.progress.value = (float) (ESP.getHeapFragmentation());
             info.progress.min = 100;
             info.progress.max = 0;
-            info.progress.unity = "%";
+            info.progress.unity = F("%");
         } else if (id == F("sketch")) {
             info.name = F("Memory - Sketch Size");
-            if (this->_fileSystem != nullptr) info.value = this->_fileSystem->formatBytes(ESP.getSketchSize());
-            else info.value = (String) ESP.getSketchSize();
+            info.value = FileSystem.formatBytes(ESP.getSketchSize());
             info.value += F(" / ");
-            if (this->_fileSystem != nullptr)
-                info.value += this->_fileSystem->formatBytes(ESP.getSketchSize() + ESP.getFreeSketchSpace());
-            else info.value += (String)(ESP.getSketchSize() + ESP.getFreeSketchSpace());
+            info.value += FileSystem.formatBytes(ESP.getSketchSize() + ESP.getFreeSketchSpace());
             info.value += F(" <i>(Used / Total)</i>");
 #ifdef USE_OTA
             if (ESP.getSketchSize() > ESP.getFreeSketchSpace())
@@ -288,7 +236,7 @@ namespace WiFi_Portail_API {
             info.progress.value = (float) (ESP.getSketchSize());
             info.progress.min = (float) (ESP.getSketchSize() + ESP.getFreeSketchSpace());
             info.progress.max = 0;
-            info.progress.unity = "bytes";
+            info.progress.unity = F("bytes");
         } else if (id == F("filesystem")) {
             //|--------------|-------|---------------|--|--|--|--|--|
             //^              ^       ^               ^     ^
@@ -296,17 +244,15 @@ namespace WiFi_Portail_API {
 
             info.name = F("Memory - FileSystem Size");
             FSInfo fsInfo;
-            if (this->_fileSystem != nullptr) {
-                this->_fileSystem->fileSystem->info(fsInfo);
-                info.value += this->_fileSystem->formatBytes(fsInfo.usedBytes);
-                info.value += F(" / ");
-                info.value += this->_fileSystem->formatBytes(fsInfo.totalBytes);
-                info.value += F(" <i>(Used / Total)</i>");
-                info.progress.value = (float) (fsInfo.usedBytes);
-                info.progress.min = (float) (fsInfo.totalBytes);
-                info.progress.max = 0;
-                info.progress.unity = "bytes";
-            }
+            FileSystem.fileSystem->info(fsInfo);
+            info.value += FileSystem.formatBytes(fsInfo.usedBytes);
+            info.value += F(" / ");
+            info.value += FileSystem.formatBytes(fsInfo.totalBytes);
+            info.value += F(" <i>(Used / Total)</i>");
+            info.progress.value = (float) (fsInfo.usedBytes);
+            info.progress.min = (float) (fsInfo.totalBytes);
+            info.progress.max = 0;
+            info.progress.unity = F("bytes");
         } else if (id == F("lastreset")) {
             info.name = F("Last reset reason");
             info.value = (String) ESP.getResetReason();
@@ -375,194 +321,10 @@ namespace WiFi_Portail_API {
 
         return info;
     }
-/*
-void ESPInfos::getInfoData(const String& id, String (&tab)[2]) {
-    String nom;
-    nom.reserve(50);
-    String value;
-    value.reserve(250);
 
-    if (id == F("esphead")) {
-        nom = F("Infos ESP8266");
-        value = F("");
-    } else if (id == F("wifihead")) {
-        nom = F("Wifi");
-        value = F("");
-    } else if (id == F("uptime")) {
-        nom = F("Uptime");
-        if(this->_ntp != nullptr) value = this->_ntp->getUptimeString();
-        else
-        {
-            unsigned long millisecs = millis();
-            value = (String)((millisecs / (1000 * 60 * 60 * 24)) % 365);
-            value += F(" Days ");
-            value += (String)((millisecs / (1000 * 60 * 60)) % 24);
-            value += F(" Hrs ");
-            value += (String)((millisecs / (1000 * 60)) % 60);
-            value += F(" Mins ");
-            value += (String)((millisecs / 1000) % 60);
-            value += F(" Secs");
-        }
-    } else if (id == F("chipid")) {
-        nom = F("Chip ID");
-        value = F("0x");
-        value += String(ESP.getChipId(), HEX);
-    } else if (id == F("fchipid")) {
-        nom = F("Flash Chip ID");
-        value = (String) ESP.getFlashChipId();
-    } else if (id == F("idesize")) {
-        nom = F("Flash IDE  Size");
-        if(this->_fileSystem != nullptr) value = this->_fileSystem->formatBytes(ESP.getFlashChipSize());
-        else value = (String)ESP.getFlashChipSize();
-    } else if (id == F("realsize")) {
-        nom = F("Flash Real Size");
-        if(this->_fileSystem != nullptr) value = this->_fileSystem->formatBytes(ESP.getFlashChipRealSize());
-        else value = (String)ESP.getFlashChipRealSize();
-    } else if (id == F("flashspeed")) {
-        nom = F("Flash Speed");
-        value = (String)(float(ESP.getFlashChipSpeed()) / 1000000);
-        value += F(" MHz");
-    } else if (id == F("flashmode")) {
-        nom = F("Flash Mode");
-        FlashMode_t ideMode = ESP.getFlashChipMode();
-        value = (ideMode == FM_QIO ? "QIO" : ideMode == FM_QOUT ? "QOUT" : ideMode == FM_DIO ? "DIO" : ideMode == FM_DOUT ? "DOUT" : "UNKNOWN");
-    } else if (id == F("sdkver")) {
-        nom = F("SDK Version");
-        value = (String) ESP.getSdkVersion();
-    } else if (id == F("corever")) {
-        nom = F("Core Version");
-        value = ESP.getCoreVersion();
-        value.replace('_', '.');
-    } else if (id == F("bootver")) {
-        nom = F("Boot Version");
-        value = (String) ESP.getBootVersion();
-    } else if (id == F("cpufreq")) {
-        nom = F("CPU Frequency");
-        value = (String) ESP.getCpuFreqMHz();
-        value += F(" MHz");
-    } else if (id == F("freeheap")) {
-        nom = F("Memory - Free Heap (RAM)");
-        value = (String) ESP.getFreeHeap();
-        value += F(" bytes available<br>");
-        value += F("<progress value='");
-        value += (String)(ESP.getHeapFragmentation());
-        value += F("' max='100'></progress> (0% is clean, more than ~50% is not harmless)");
-    } else if (id == F("memsketch")) {
-        nom = F("Memory - Sketch Size");
-        if(this->_fileSystem != nullptr) value = this->_fileSystem->formatBytes(ESP.getSketchSize());
-        else value = (String)ESP.getSketchSize();
-        value += F(" / ");
-        if(this->_fileSystem != nullptr) value += this->_fileSystem->formatBytes(ESP.getSketchSize() + ESP.getFreeSketchSpace());
-        else value += (String)(ESP.getSketchSize() + ESP.getFreeSketchSpace());
-        value += F(" (Used / Total bytes)");
-//        value += F("<br><progress value='");
-//        value += (String)(ESP.getSketchSize()) ;
-//        value += F("' max='");
-//        value += (String)(ESP.getSketchSize()+ESP.getFreeSketchSpace());
-//        value += F("'></progress>");
-    } else if (id == F("allmems")) {
-        //|--------------|-------|---------------|--|--|--|--|--|
-        //^              ^       ^               ^     ^
-        //Sketch    OTA update   File system   EEPROM  WiFi config (SDK)
-//    ESP.getFlashChipRealSize(); // en bytes
+    DynamicJsonDocument ESPInfosClass::toJson() { return this->getHardwareInfosJson2(); };
 
-//    ESP.getSketchSize(); // en bytes
-//    ESP.getFreeSketchSpace(); // en bytes
+    DynamicJsonDocument ESPInfosClass::toObj() { return this->getHardwareInfosJsonObj(); };
 
-//    FSInfo fsInfo;
-//    fileSystem->info(fsInfo);
-//    DEBUG_PRINT(F("info totalbytes :    "));
-//    DEBUG_PRINT((float)(fsInfo.totalBytes / 1024.0));
-//    DEBUG_PRINTLN(F(" ko"));
-//    DEBUG_PRINT(F("info usedbytes :     "));
-//    DEBUG_PRINT((float)(fsInfo.usedBytes/1024.0));
-//    DEBUG_PRINTLN(F(" ko"));
-
-//    ESP.getFreeHeap(); // ram en bytes
-//    ESP.getHeapFragmentation()); // returns the fragmentation metric (0% is clean, more than ~50% is not harmless)
-//    ESP.getMaxFreeBlockSize());     // returns the maximum allocatable ram block regarding heap fragmentation
-
-        nom = F("All Memories");
-        value = F("Sketch (bytes) / FileSystem (bytes) / RAM (%)<br>");
-        value += F("<progress value='");
-        value += (String)(ESP.getSketchSize());
-        value += F("' max='");
-        value += (String)(ESP.getSketchSize() + ESP.getFreeSketchSpace());
-        value += F("'></progress>");
-        FSInfo fsInfo;
-        if(this->_fileSystem != nullptr) this->_fileSystem->fileSystem->info(fsInfo);
-        value += F("<progress value='");
-        value += (String)(fsInfo.usedBytes);
-        value += F("' max='");
-        value += (String)(fsInfo.totalBytes);
-        value += F("'></progress>");
-        value += F("<progress value='");
-        value += (String)(ESP.getHeapFragmentation());
-        value += F("' max='100'></progress>");
-    } else if (id == F("lastreset")) {
-        nom = F("Last reset reason");
-        value = (String) ESP.getResetReason();
-    } else if (id == F("wifimode")) {
-        nom = F("Wifi Mode");
-        //WIFI_OFF = 0, WIFI_STA = 1, WIFI_AP = 2, WIFI_AP_STA = 3,
-        int wifi_mode = WiFi.getMode();
-        switch (wifi_mode) {
-            case 0: // WIFI_OFF
-                value = F("WIFI_OFF");
-                break;
-            case 1: // WIFI_STA
-                value = F("WIFI_STA");
-                break;
-            case 2: // WIFI_AP
-                value = F("WIFI_AP");
-                break;
-            case 3: // WIFI_AP_STA
-                value = F("WIFI_AP_STA");
-                break;
-        }
-    } else if (id == F("apip")) {
-        nom = F("Access Point IP");
-        value = WiFi.softAPIP().toString();
-    } else if (id == F("apmac")) {
-        nom = F("Access Point MAC");
-        value = (String) WiFi.softAPmacAddress();
-    } else if (id == F("ssid")) {
-        nom = F("SSID");
-        value = (String) WiFi.SSID();
-    } else if (id == F("bssid")) {
-        nom = F("BSSID");
-        value = (String) WiFi.BSSIDstr();
-    } else if (id == F("staip")) {
-        nom = F("Station IP");
-        value = WiFi.localIP().toString();
-    } else if (id == F("stagw")) {
-        nom = F("Station Gateway");
-        value = WiFi.gatewayIP().toString();
-    } else if (id == F("stasub")) {
-        nom = F("Station Subnet");
-        value = WiFi.subnetMask().toString();
-    } else if (id == F("dnss")) {
-        nom = F("DNS Server");
-        value = WiFi.dnsIP().toString();
-    } else if (id == F("host")) {
-        nom = F("Hostname");
-        value = WiFi.hostname();
-    } else if (id == F("stamac")) {
-        nom = F("Station MAC");
-        value = WiFi.macAddress();
-    } else if (id == F("conx")) {
-        nom = F("Connected");
-        value = WiFi.isConnected() ? F("Yes") : F("No");
-    } else if (id == F("autoconx")) {
-        nom = F("Autoconnect");
-        value = WiFi.getAutoConnect() ? F("Enabled") : F("Disabled");
-    } else {
-        nom = F("Error");
-        value = F("Error");
-    }
-
-    tab[0] = nom;
-    tab[1] = value;
-}*/
-
+    String ESPInfosClass::toString() { return this->getHardwareInfosString2(); };
 }

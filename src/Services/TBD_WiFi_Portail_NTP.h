@@ -5,19 +5,15 @@
 #ifndef TBD_WIFI_PORTAIL_NTP_H
 #define TBD_WIFI_PORTAIL_NTP_H
 
-#include <Arduino.h>
-#include "TBD_WiFi_Portail.h"
-
-#ifdef USE_NTP
 #include "Service.h"
 
-#include "TBD_WiFi_Portail_SerialDebug.h"
+#ifdef USE_NTP
 
 // from https://github.com/gmag11/NtpClient/blob/master/examples/NTPClientBasic/NTPClientBasic.ino
 #include <ESPAsyncUDP.h>
 #include <TimeLib.h>      //TimeLib library is needed https://github.com/PaulStoffregen/Time
 #include <NtpClientLib.h> //Include NtpClient library header
-
+/*
 #warning Be sure to modify the NTPClientLib.h library in the first lines: \
     "using namespace std;\n \
     using namespace placeholders;" \
@@ -25,6 +21,7 @@
     "//using namespace std;\n \
     using namespace std::placeholders;" \
     and, DO NOT USE OTHER "using namespace std" in your code
+*/
 
 namespace WiFi_Portail_API {
 
@@ -42,22 +39,36 @@ namespace WiFi_Portail_API {
         bool summerTime;
 
         String toString() const {
-            return String(this->day) + F("/") + String(this->month) + F("/") + String(this->year) + F(" ") +
-                   String(this->hour) + F(":") + String(this->min) + F(":") + String(this->sec) + F(" UTC") +
-                   (this->timezone < 0 ? F("") : F("+")) + String(this->timezone) + F(" ") +
-                   (this->summerTime ? F("Summer Time") : F("Winter Time"));
+            String s;
+            s += this->day;
+            s += F("/");
+            s += this->month;
+            s += F("/");
+            s += this->year;
+            s += F(" ");
+            s += this->hour;
+            s += F(":");
+            s += this->min;
+            s += F(":");
+            s += this->sec;
+            s += F(" UTC");
+            s += this->timezone < 0 ? F("") : F("+");
+            s += this->timezone;
+            s += F(" ");
+            s += this->summerTime ? F("Summer Time") : F("Winter Time");
+            return s;
         }
     };
 
-    class NTP : public Service {
+    class NTPManagerClass : public Service {
     public:
-        NTP(SerialDebug &serialDebug, const String &ntpServerName = "pool.ntp.org");
+        NTPManagerClass();
 
-        ~NTP();
+        ~NTPManagerClass();
 
-        void begin();
+        void begin(const String &ntpServerName = "pool.ntp.org");
 
-        void loop();
+        void loop() const;
 
         bool setNtpServerName(const String &ntpServerName);
 
@@ -114,14 +125,11 @@ namespace WiFi_Portail_API {
         String toString2() override { return this->getUptimeString(); };
 
     private:
-        SerialDebug *_serialDebug;
 
         boolean _syncEventTriggered = false; // True if a time even has been triggered
         boolean _couldSendTime = false;
         NTPSyncEvent_t _ntpEvent; // Last triggered event
-        AsyncUDP *_udp;
 
-        NTPClient *_ntp; // for NtpClientLib.h
         RealTime _realTime;
 
         String _ntpServerName;
@@ -131,6 +139,8 @@ namespace WiFi_Portail_API {
         int _timeout;
         int _interval;
     };
+
+    extern NTPManagerClass NTPManager;
 }
 #endif // USE_NTP
 

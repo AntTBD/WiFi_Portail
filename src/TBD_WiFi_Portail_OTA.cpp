@@ -8,77 +8,82 @@
 
 namespace WiFi_Portail_API {
 
-    OTA::OTA(SerialDebug &serialDebug, FileSystem &fileSystem, String hostname, String password) :
-            _serialDebug(&serialDebug), _fileSystem(&fileSystem), _password(password) {
+    OTAManagerClass OTAManager;
 
-        this->setHostname(hostname);
+    OTAManagerClass::OTAManagerClass() {
+
+        this->_hostname = this->_password = F("");
 #if defined(ESP8266)
         this->led_pin = D4;
 #else
         this->led_pin = -1;
 #endif
-        //this->_arduinoOTA = new ArduinoOTAClass();
         this->_webEvents = nullptr;
-        this->_mdns = nullptr;
-        this->_arduinoOtaUseMDNS = true;
+        this->setArduinoOtaUseMDNS(true);
     }
 
-    OTA::~OTA() {
-        delete this->_serialDebug;
-        delete this->_fileSystem;
+    OTAManagerClass::~OTAManagerClass() {
         delete this->_webEvents;
-        delete this->_mdns;
 
-        //delete this->_arduinoOTA;
     }
 
-    void OTA::addWebEvents(WebEvents &webEvents) {
+    // Add web events to have ability to informe client during ota update
+    void OTAManagerClass::addWebEvents(WebEvents &webEvents) {
         this->_webEvents = &webEvents;
     }
 
-    void OTA::addMDNS(MDNSManager &mdns) {
-        this->_mdns = &mdns;
-    }
-
-    void OTA::setHostname(const String &hostname) {
-        if (this->_mdns != nullptr) {
-            this->_mdns->setMdnsName(hostname); // on donne une petit nom a notre module
-        }
+    void OTAManagerClass::setHostname(const String &hostname) {
+#ifdef USE_MDNS
+        MDNSManager.setMdnsName(hostname); // on donne une petit nom a notre module
+#endif // USE_MDNS
         this->_hostname = hostname;
     }
 
-    void OTA::setPassword(const String &password) {
+    void OTAManagerClass::setPassword(const String &password) {
         this->_password = password;
     }
 
-    String OTA::getHostname() const {
+    String OTAManagerClass::getHostname() const {
         return this->_hostname;
     }
 
-    String OTA::getPassword() const {
+    String OTAManagerClass::getPassword() const {
         return this->_password;
     }
 
-    void OTA::setArduinoOtaUseMDNS(bool arduinoOtaUseMDNS) {
+    void OTAManagerClass::setArduinoOtaUseMDNS(bool arduinoOtaUseMDNS) {
         this->_arduinoOtaUseMDNS = arduinoOtaUseMDNS;
+
     }
 
-    bool OTA::getArduinoOtaUseMDNS() const {
+    bool OTAManagerClass::getArduinoOtaUseMDNS() const {
         return this->_arduinoOtaUseMDNS;
     }
 
-    String OTA::toString() const {
-        return (String) F("=========== OTA ===========") + F("\n") + F("Hostname :      ") + this->getHostname() +
-               F("            !!!! used mDNS hostname !!!!") + F("\n") + F("Password :      ") + this->getPassword() +
-               F("\n") + F("===========================");
+    String OTAManagerClass::toString() const {
+        String str;
+        str += F("=========== OTA ===========");
+        str += F("\n");
+        str += F("Hostname:      ");
+        str += this->getHostname();
+        str += F("            !!!! used mDNS hostname !!!!");
+        str += F("\n");
+        str += F("Password:      ");
+        str += this->getPassword();
+        str += F("\n");
+        str += F("===========================");
+
+        return str;
     }
 
 // ------------------------------------ setup OTA ----------------------------------------
-    void OTA::begin() {
+    void OTAManagerClass::begin(String hostname, String password) {
 
-        this->_serialDebug->println(F("=== Setup OTA ==="));
+        SerialDebug_println(F("=== Setup OTA ==="));
+        this->setHostname(hostname);
+        this->setPassword(password);
 
-        this->_serialDebug->println(this->toString());
+        SerialDebug_println(this->toString());
 
         pinMode(this->led_pin, OUTPUT);    // Initialise la broche "led" comme une sortie
         digitalWrite(this->led_pin, HIGH); // on eteind la led
@@ -88,15 +93,16 @@ namespace WiFi_Portail_API {
 
         // Hostname defaults to esp8266-[ChipID]
         // here : use mDNS name
-        if (this->_mdns != nullptr) {
-            ArduinoOTA.setHostname(this->_mdns->getMdnsName().c_str()); // on donne une petit nom a notre module
-        } else {
-            ArduinoOTA.setHostname(this->_hostname.c_str()); // on donne une petit nom a notre module
-        }
+
+#ifdef USE_MDNS
+        ArduinoOTA.setHostname(MDNSManager.getMdnsName().c_str()); // on donne une petit nom a notre module
+#else
+        ArduinoOTA.setHostname(this->_hostname.c_str()); // on donne une petit nom a notre module
+#endif // USE_MDNS
+
         // Authentication
         ArduinoOTA.setPassword(
                 this->_password.c_str()); //IDE Arduino nous demandera de saisir le mot de passe à chaque fois que vous téléverserez un programme.
-        //ArduinoOTA.setPassword("password_OTA");
 
         // allumage led
         ArduinoOTA.onStart(
@@ -110,33 +116,38 @@ namespace WiFi_Portail_API {
 
         ArduinoOTA.begin(this->_arduinoOtaUseMDNS); // initialize OTA
 
-        this->_serialDebug->println(F(" -> OTA ready"));
-        this->_serialDebug->println(
+        SerialDebug_println(F(" -> OTA ready"));
+        SerialDebug_println(
                 F("/!\\ Be shure to be in the same network for ota update (computer self-sharedWifi not works !!!!)"));
-        this->_serialDebug->println(F("================="));
+        SerialDebug_println(F("================="));
     }
 
 // ---------------------------------------- loop OTA -------------------------------------------
-    void OTA::loop() {
+    void OTAManagerClass::loop() {
+#ifdef USE_MDNS
+        if (MDNSManager.isUpdatingMDNSInThisClass() == this->_arduinoOtaUseMDNS) {// ensure to not update mDNS if we use it with ota
+            MDNSManager.setUpdatingMDNSInThisClass(!this->_arduinoOtaUseMDNS);
+        }
+#endif // USE_MDNS
         // a chaque iteration, on verifie si une mise a jour du sketch nous est envoyee
         // si tel est le cas, la lib ArduinoOTA se charge de gerer la suite :)
         ArduinoOTA.handle();
         yield();
     }
 
-    void OTA::rebootESP8266() {
+    void OTAManagerClass::rebootESP8266() {
         if (this->_webEvents != nullptr)
             this->_webEvents->debug_to_WSEvents(F("Soft reboot via ESP.restart()..."));
-        this->_fileSystem->filesytem_end();
+        FileSystem.filesytem_end();
         //close_WebSocket();
         this->reset_all_pins();
         //disconnect_Wifi();
         delay(1000);
 
-        restartESP();
+        Utils.restartESP();
     }
 
-    void OTA::reset_all_pins() {
+    void OTAManagerClass::reset_all_pins() {
 
         digitalWrite(D1, LOW);
         digitalWrite(D2, LOW);
@@ -154,13 +165,12 @@ namespace WiFi_Portail_API {
         }
     }
 
-    void OTA::arduinoOTAOnStart() {
-        this->_serialDebug->println(
-                F("Be shure to be in the same network for ota update (computer self-sharedWifi not works !!!!)"));
+    void OTAManagerClass::arduinoOTAOnStart() {
+        SerialDebug_println(F("Be shure to be in the same network for ota update (computer self-sharedWifi not works !!!!)"));
         if (this->_webEvents != nullptr)
             this->_webEvents->debug_to_WSEvents(
-                    F("Be shure to be in the same network for ota update (computer self-sharedWifi not works !!!!)"),
-                    "ota");
+                    F("Be shure to be in the same network for ota update <b>(computer self-sharedWifi not works !!!!)</b>"),
+                    F("WARN"));
 
         String type = "";
         if (ArduinoOTA.getCommand() == U_FLASH) {
@@ -169,7 +179,7 @@ namespace WiFi_Portail_API {
             type = F("filesystem");
         }
         // NOTE: if updating fileSystem this would be the place to unmount fileSystem using fileSystem.end()
-        this->_fileSystem->filesytem_end();
+        FileSystem.filesytem_end();
         //close_WebSocket();
         this->reset_all_pins();
         delay(1000);
@@ -181,27 +191,26 @@ namespace WiFi_Portail_API {
         msg += type;
         msg += F(")");
         if (this->_webEvents != nullptr)
-            this->_webEvents->debug_to_WSEvents(msg, "ota");
+            this->_webEvents->debug_to_WSEvents(msg, F("ota"));
         //fin TBD
     }
 
-    void OTA::arduinoOTAOnEnd() {
+    void OTAManagerClass::arduinoOTAOnEnd() {
         digitalWrite(this->led_pin, HIGH); // éteint à la fin de la mise à jour
         //Serial.println(F("\n* OTA: End"));
-        //events.send("* OTA: Update End", "ota");//TBD
+        //events.send("* OTA: Update End", F("ota"));//TBD
         char p[50];
         sprintf(p, "* OTA: free space: %u / total: %u\n", ESP.getFreeSketchSpace(),
                 (ESP.getSketchSize() + ESP.getFreeSketchSpace()));
-        //events.send(p, "ota");
+        //events.send(p, F("ota"));
         if (this->_webEvents != nullptr) {
-            this->_webEvents->debug_to_WSEvents(p, "ota");
-            this->_webEvents->debug_to_WSEvents(F("* OTA: Update End"), "ota");
+            this->_webEvents->debug_to_WSEvents(p, F("ota"));
+            this->_webEvents->debug_to_WSEvents(F("* OTA: Update End"), F("ota"));
         }
-
         this->rebootESP8266();
     }
 
-    void OTA::arduinoOTAOnProgress(unsigned int progress, unsigned int total) {
+    void OTAManagerClass::arduinoOTAOnProgress(unsigned int progress, unsigned int total) {
         //Serial.printf("* OTA: Progress: %u%%\r", (progress / (total / 100)));
 
         //digitalWrite(led_pin_OTA, (millis() / 500) % 2);
@@ -214,39 +223,39 @@ namespace WiFi_Portail_API {
                     ESP.getFreeSketchSpace(), (ESP.getSketchSize() + ESP.getFreeSketchSpace()));
             //events.send(p, "ota");
             if (this->_webEvents != nullptr)
-                this->_webEvents->debug_to_WSEvents(p, "ota");
+                this->_webEvents->debug_to_WSEvents(p, F("ota"));
         }
     }
 
-    void OTA::arduinoOTAOnError(ota_error_t error) {
+    void OTAManagerClass::arduinoOTAOnError(ota_error_t error) {
         if (this->_webEvents != nullptr) {
             //Serial.printf("* OTA: Error[%u]: ", error);
-            //this->_webEvents->debug_to_WSEvents((String)F("* OTA: Error[")+error+(String)F("]"), "ota");
+            //this->_webEvents->debug_to_WSEvents((String)F("* OTA: Error[")+error+(String)F("]"), F("ota"));
             if (error == OTA_AUTH_ERROR) {
-                this->_webEvents->debug_to_WSEvents(F("Auth Failed"), "ota");
+                this->_webEvents->debug_to_WSEvents(F("Auth Failed"), F("ota"));
                 //Serial.println("Auth Failed");
                 // events.send("Auth Failed", "ota");
             } else if (error == OTA_BEGIN_ERROR) {
-                this->_webEvents->debug_to_WSEvents(F("Begin Failed"), "ota");
+                this->_webEvents->debug_to_WSEvents(F("Begin Failed"), F("ota"));
                 //Serial.println("Begin Failed");
                 // events.send("Begin Failed", "ota");
             } else if (error == OTA_CONNECT_ERROR) {
-                this->_webEvents->debug_to_WSEvents(F("Connect Failed"), "ota");
+                this->_webEvents->debug_to_WSEvents(F("Connect Failed"), F("ota"));
                 //Serial.println("Connect Failed");
                 // events.send("Connect Failed", "ota");
             } else if (error == OTA_RECEIVE_ERROR) {
-                this->_webEvents->debug_to_WSEvents(F("Receive Failed"), "ota");
+                this->_webEvents->debug_to_WSEvents(F("Receive Failed"), F("ota"));
                 //Serial.println("Receive Failed");
                 // events.send("Recieve Failed", "ota");
             } else if (error == OTA_END_ERROR) {
-                this->_webEvents->debug_to_WSEvents(F("End Failed"), "ota");
+                this->_webEvents->debug_to_WSEvents(F("End Failed"), F("ota"));
                 //Serial.println("End Failed");
                 // events.send("End Failed", "ota");
             }
 
             //Serial.println(F("* OTA: ESP Restart"));
-            //events.send("Ota Error => ESP Restart", "ota");//TBD
-            this->_webEvents->debug_to_WSEvents(F("* OTA: ESP Restart"), "ota");
+            //events.send("Ota Error => ESP Restart", F("ota"));//TBD
+            this->_webEvents->debug_to_WSEvents(F("* OTA: ESP Restart"), F("ota"));
         }
         this->rebootESP8266();
     }

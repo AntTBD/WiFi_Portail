@@ -5,9 +5,7 @@
 #ifndef TBD_WIFI_PORTAIL_FILESYSTEM_H
 #define TBD_WIFI_PORTAIL_FILESYSTEM_H
 
-#include <Arduino.h>
 #include "TBD_WiFi_Portail.h"
-#include "TBD_WiFi_Portail_SerialDebug.h"
 #include <vector>
 
 
@@ -50,7 +48,13 @@ namespace WiFi_Portail_API {
         float size;
 
         String serialized() const {
-            return (String) F("{") + F("\"name\": \"") + name + F("\",") + F("\"size\":") + size + F("}");
+            String s;
+            s += F("{\"name\":\"");
+            s += name;
+            s += F("\",\"size\":");
+            s += size;
+            s += F("}");
+            return s;
         }
 
     };
@@ -62,39 +66,41 @@ namespace WiFi_Portail_API {
         std::vector<_Directory *> childrenDirectories;
 
         String serialized() const {
-            String result = (String) F("{") + F("\"name\": \"") + name + F("\",") + F("\"size\":") + size + F(",") +
-                            F("\"children\":[");
+            String result;
+            result += F("{\"name\": \"");
+            result += name;
+            result += F("\",\"size\":");
+            result += size;
+            result += F(",\"children\":[");
             int i = 0;
             for (_Directory *dir: childrenDirectories) {
                 i++;
                 result += dir->serialized();
                 if (i != childrenDirectories.size()) {
-                    result += (String) F(",");
+                    result += F(",");
                 }
             }
-            result += (String) F("]") + F(",");
-            result += (String) F("\"files\":[");
+            result += F("],\"files\":[");
             int j = 0;
             for (_File *file: childrenFiles) {
                 j++;
                 result += file->serialized();
                 if (j != childrenFiles.size()) {
-                    result += (String) F(",");
+                    result += F(",");
                 }
             }
-            result += (String) F("]");
-            result += (String) F("}");
+            result += F("]}");
             return result;
         }
     };
 
-    class FileSystem {
+    class FileSystemClass {
     public:
-        FileSystem(SerialDebug &serialDebug, bool resetFileSystemAtStartup = false);
+        FileSystemClass();
 
-        ~FileSystem();
+        ~FileSystemClass();
 
-        bool begin();
+        bool begin(bool resetFileSystemAtStartup = false);
 
         uint16_t getListOfAllFilesInMemory();
 
@@ -120,10 +126,12 @@ namespace WiFi_Portail_API {
 #endif
 
     private:
+
         bool _resetFileSystemAtStartup;
-        SerialDebug *_serialDebug;
 
         std::vector<_Directory *> listOfFiles;
     };
+
+    extern FileSystemClass FileSystem;
 }
 #endif //TBD_WIFI_PORTAIL_FILESYSTEM_H

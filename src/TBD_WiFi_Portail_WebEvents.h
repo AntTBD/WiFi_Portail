@@ -5,9 +5,7 @@
 #ifndef TBD_WIFI_PORTAIL_WEBEVENTS_H
 #define TBD_WIFI_PORTAIL_WEBEVENTS_H
 
-#include <Arduino.h>
 #include "TBD_WiFi_Portail.h"
-#include "TBD_WiFi_Portail_SerialDebug.h"
 #include "TBD_WiFi_Portail_WebServer.h"
 
 #include <ESPAsyncTCP.h>       // https://github.com/me-no-dev/ESPAsyncTCP
@@ -31,9 +29,7 @@ namespace WiFi_Portail_API {
 
     class WebEvents {
     public:
-        WebEvents(SerialDebug &serialDebug, WebServer &webServer,
-                                   const String &eventsRoot = "/events",
-                                   const String &eventsAdminRoot = "/eventsAdmin");
+        WebEvents(WebServer &webServer, const String &eventsRoot = "/events", const String &eventsAdminRoot = "/eventsAdmin");
 
         ~WebEvents();
 
@@ -55,7 +51,6 @@ namespace WiFi_Portail_API {
         sEventType *eventType;
 
     private:
-        SerialDebug *_serialDebug;
         WebServer *_webServer;
 
         String _eventsRoot;

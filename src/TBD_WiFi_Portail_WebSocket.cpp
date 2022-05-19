@@ -5,26 +5,18 @@
 #include "TBD_WiFi_Portail_WebSocket.h"
 
 namespace WiFi_Portail_API {
-    WebSocket::WebSocket(SerialDebug &serialDebug, WebServer &webServer /*, WifiManager& wifiManager*/, const String &root) :
-    _serialDebug(&serialDebug), _webServer(&webServer), _root(root) /*,_wifiManager(&wifiManager)*/
+    WebSocket::WebSocket(WebServer &webServer, const String &root) :
+    _webServer(&webServer), _root(root)
     {
         this->webSocket = new AsyncWebSocket(_root);
 
         this->_webEvents = nullptr;
-        this->_ntp = nullptr;
-        this->_espInfos = nullptr;
         this->_allCommands = new std::vector<PathMethodOnRequestWebSocket>();
     }
 
     WebSocket::~WebSocket() {
-        delete this->_serialDebug;
         delete this->_webServer;
         delete this->_webEvents;
-#ifdef USE_NTP
-        delete this->_ntp;
-#endif // USE_NTP
-        delete this->_espInfos;
-        //delete this->_wifiManager;
 
         delete this->webSocket;
 
@@ -36,14 +28,6 @@ namespace WiFi_Portail_API {
         this->_webEvents = &webEvents;
     }
 
-    void WebSocket::addNTP(Service &ntp) {
-        this->_ntp = &ntp;
-    }
-
-    void WebSocket::addESPInfos(Service &espInfos) {
-        this->_espInfos = &espInfos;
-    }
-
     void
     WebSocket::addCommand(const char *commandNameIn, const char *commandNameOut, HandlerFunctionWebSocket onCommand) {
         // define command
@@ -52,9 +36,9 @@ namespace WiFi_Portail_API {
 
     }
 
-// ------------------------------------------ Start a WebSocket server -----------------------------------------
+    // ------------------------------------------ Start a WebSocket server -----------------------------------------
     void WebSocket::begin() {
-        this->_serialDebug->println(F("== Setup WebSocket =="));
+        SerialDebug.println(F("== Setup WebSocket =="));
 
         this->webSocket->enable(true);
 
@@ -63,7 +47,7 @@ namespace WiFi_Portail_API {
                     [&](AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg,
                         uint8_t *data, size_t len) { this->onWsEvent(server, client, type, arg, data, len); });
             this->_webServer->server->addHandler(this->webSocket);
-            this->_serialDebug->println(F("WebSocket server started. (/ws)"));
+            SerialDebug.println(F("WebSocket server started. (/ws)"));
 
             // define commands
             this->addCommand(
@@ -92,47 +76,47 @@ namespace WiFi_Portail_API {
                     //std::bind(&WebSocket::handleCommandFiles, this,std::placeholders::_2)
                     [&](AsyncWebSocketClient *client, String value) { this->handleCommandFiles(client, value); });
 
-            this->_serialDebug->print(F("commands: (nbr="));
-            this->_serialDebug->print(this->_allCommands->size());
-            this->_serialDebug->println(F(")"));
+            SerialDebug.print(F("commands: (nbr="));
+            SerialDebug.print(this->_allCommands->size());
+            SerialDebug.println(F(")"));
 
             for (PathMethodOnRequestWebSocket &command: *this->_allCommands) {
-                this->_serialDebug->println((String) F("  ") + command.commandNameIn);
+                SerialDebug.println((String) F("  ") + command.commandNameIn);
             }
         } else {
-            this->_serialDebug->println(F("WebSocket server  start failed"));
+            SerialDebug.println(F("WebSocket server  start failed"));
         }
 
-        this->_serialDebug->println(F("====================="));
+        SerialDebug.println(F("====================="));
     }
 
-// -------------------------------------- loop WebSocket --------------------------------------------
+    // -------------------------------------- loop WebSocket --------------------------------------------
     void WebSocket::loop() {
         // Limiting the number of web socket clients
         // https://github.com/me-no-dev/ESPAsyncWebServer#limiting-the-number-of-web-socket-clients
         this->webSocket->cleanupClients();
     }
 
-// ----------------------------------------- When a WebSocket message is received renvoi du bon type de syntaxe --------------------------------
+    // ----------------------------------------- When a WebSocket message is received renvoi du bon type de syntaxe --------------------------------
     void WebSocket::onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
         if (type == WS_EVT_CONNECT) {
-            this->_serialDebug->printf(F("[WS][%s][%u] new client connected\n"), server->url(), client->id());
+            SerialDebug.printf(F("[WS][%s][%u] new client connected\n"), server->url(), client->id());
             client->printf("Hello Client %u :)", client->id());
             //client->ping();
 
             //this->envoieAllInfosNewClient(client->id()); // TODO : TBD
         } else if (type == WS_EVT_DISCONNECT) {
-            this->_serialDebug->printf(F("[WS][%s][%u] disconnect\n"), server->url(), client->id());
+            SerialDebug.printf(F("[WS][%s][%u] disconnect\n"), server->url(), client->id());
         } else if (type == WS_EVT_ERROR) {
-            this->_serialDebug->printf(F("[WS][%s][%u] error(%u): %s\n"), server->url(), client->id(), *((uint16_t *) arg), (char *) data);
+            SerialDebug.printf(F("[WS][%s][%u] error(%u): %s\n"), server->url(), client->id(), *((uint16_t *) arg), (char *) data);
         } else if (type == WS_EVT_PONG) {
-            this->_serialDebug->printf(F("[WS][%s][%u] pong[%u]: %s\n"), server->url(), client->id(), len, (len) ? (char *) data : "");
+            SerialDebug.printf(F("[WS][%s][%u] pong[%u]: %s\n"), server->url(), client->id(), len, (len) ? (char *) data : "");
         } else if (type == WS_EVT_DATA) {
             AwsFrameInfo *info = (AwsFrameInfo *) arg;
             String msg = F("");
             if (info->final && info->index == 0 && info->len == len) {
                 //the whole message is in a single frame and we got all of it's data
-                this->_serialDebug->printf(F("[WS][%s][%u] %s-message[%llu]: "), server->url(), client->id(), (info->opcode == WS_TEXT) ? F("text") : F("binary"), info->len);
+                SerialDebug.printf(F("[WS][%s][%u] %s-message[%llu]: "), server->url(), client->id(), (info->opcode == WS_TEXT) ? F("text") : F("binary"), info->len);
 
                 if (info->opcode == WS_TEXT) {
                     for (size_t i = 0; i < info->len; i++) {
@@ -151,17 +135,17 @@ namespace WiFi_Portail_API {
                 else
                     client->binary(F("(From server) I got your binary message"));
 
-                //this->_serialDebug->printf(F("%s\n"),msg.c_str());
-                this->_serialDebug->println(msg);
+                //SerialDebug.printf(F("%s\n"),msg.c_str());
+                SerialDebug.println(msg);
 
                 //TBD
                 if (msg == F("heartbeat")) {
-                    this->_serialDebug->printf(F("[WS][%s][%u] heartbeat\n"), server->url(), client->id());
+                    SerialDebug.printf(F("[WS][%s][%u] heartbeat\n"), server->url(), client->id());
                 } else if (msg.substring(0, 7) == F("Connect")) {
-                    this->_serialDebug->printf(F("[WS][%s][%u] connect\n"), server->url(), client->id());
+                    SerialDebug.printf(F("[WS][%s][%u] connect\n"), server->url(), client->id());
                 } else {
                     this->handleReceivedMessage(msg.c_str(), client);
-                    this->_serialDebug->println(F("=== Traitement WebSocket TERMINE ! ==="));
+                    SerialDebug.println(F("=== Traitement WebSocket TERMINE ! ==="));
                 }
                 //fin TBD
 
@@ -169,11 +153,11 @@ namespace WiFi_Portail_API {
                 //message is comprised of multiple frames or the frame is split into multiple packets
                 if (info->index == 0) {
                     if (info->num == 0)
-                        this->_serialDebug->printf(F("[WS][%s][%u] %s-message start\n"), server->url(), client->id(), (info->message_opcode == WS_TEXT) ? F("text") : F("binary"));
-                    this->_serialDebug->printf(F("[WS][%s][%u] frame[%u] start[%llu]\n"), server->url(), client->id(), info->num, info->len);
+                        SerialDebug.printf(F("[WS][%s][%u] %s-message start\n"), server->url(), client->id(), (info->message_opcode == WS_TEXT) ? F("text") : F("binary"));
+                    SerialDebug.printf(F("[WS][%s][%u] frame[%u] start[%llu]\n"), server->url(), client->id(), info->num, info->len);
                 }
 
-                this->_serialDebug->printf(F("ws[%s][%u] frame[%u] %s[%llu - %llu]: "), server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT) ? F("text") : F("binary"), info->index, info->index + len);
+                SerialDebug.printf(F("ws[%s][%u] frame[%u] %s[%llu - %llu]: "), server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT) ? F("text") : F("binary"), info->index, info->index + len);
 
                 if (info->opcode == WS_TEXT) {
                     for (size_t i = 0; i < len; i++) {
@@ -186,12 +170,12 @@ namespace WiFi_Portail_API {
                         msg += buff;
                     }
                 }
-                this->_serialDebug->println(msg);
+                SerialDebug.println(msg);
 
                 if ((info->index + len) == info->len) {
-                    this->_serialDebug->printf(F("[WS][%s][%u] frame[%u] end[%llu]\n"), server->url(), client->id(), info->num, info->len);
+                    SerialDebug.printf(F("[WS][%s][%u] frame[%u] end[%llu]\n"), server->url(), client->id(), info->num, info->len);
                     if (info->final) {
-                        this->_serialDebug->printf(F("[WS][%s][%u] %s-message end\n"), server->url(), client->id(), (info->message_opcode == WS_TEXT) ? F("text") : F("binary"));
+                        SerialDebug.printf(F("[WS][%s][%u] %s-message end\n"), server->url(), client->id(), (info->message_opcode == WS_TEXT) ? F("text") : F("binary"));
                         if (info->message_opcode == WS_TEXT)
                             client->text(F("(From server) I got your text message"));
                         else
@@ -202,9 +186,9 @@ namespace WiFi_Portail_API {
         }
     }
 
-// ------------------------------------- analyse la demande et renvoi les bonnes infos -------------------------------
+    // ------------------------------------- analyse la demande et renvoi les bonnes infos -------------------------------
     void WebSocket::handleReceivedMessage(const String &message, AsyncWebSocketClient *client) {
-        this->_serialDebug->println(F("handleReceivedMessage"));           //TBD
+        SerialDebug.println(F("handleReceivedMessage"));           //TBD
         DynamicJsonDocument JSONBuffer(JSON_OBJECT_SIZE(2) + 200);         // Memory pool
         DeserializationError error = deserializeJson(JSONBuffer, message); // Parse message
 
@@ -213,7 +197,7 @@ namespace WiFi_Portail_API {
             if (this->_webEvents != nullptr)
                 this->_webEvents->debug_to_WSEvents(F("Parsing ws message failed"), "error");
             else
-                this->_serialDebug->println(F("error : Parsing ws message failed"));
+                SerialDebug.println(F("error : Parsing ws message failed"));
             return;
         }
 
@@ -233,14 +217,14 @@ namespace WiFi_Portail_API {
         }
 
         if (!commandFound) {
-            this->_serialDebug->println((String) F("Command not recognized ") + command);
+            SerialDebug.println((String) F("Command not recognized ") + command);
             this->send((String) F("Command not regognized ") + command, client);
         }
     }
 
-// -------------------------------------- close WebSocket --------------------------------------------
+    // -------------------------------------- close WebSocket --------------------------------------------
     void WebSocket::close_WebSocket() {
-        this->_serialDebug->println(F("[WS] Websocket close"));
+        SerialDebug.println(F("[WS] Websocket close"));
         // Advertise connected clients what's going on
         if (this->_webEvents != nullptr)
             this->_webEvents->debug_to_WSEvents(F("[WS] Websocket close"));
@@ -251,20 +235,29 @@ namespace WiFi_Portail_API {
         this->webSocket->closeAll();
     }
 
-//-----------------------------------------------------------------------
+    //-----------------------------------------------------------------------
 
-// send json to one client if defined else to all clients
+    // send json to one client if defined else to all clients
     void WebSocket::send(const JsonDocument &doc, AsyncWebSocketClient *client) {
         if (this->webSocket->enabled()) {
-
+#ifdef WEBSOCKETSENDJSONPRETTY
             size_t len = measureJsonPretty(doc);
-            AsyncWebSocketMessageBuffer *buffer = this->webSocket->makeBuffer(
-                    len); //  creates a buffer (len + 1) for you.
+            AsyncWebSocketMessageBuffer *buffer = this->webSocket->makeBuffer(len); //  creates a buffer (len + 1) for you.
 
             if (buffer) {
                 serializeJsonPretty(doc, (char *) buffer->get(), len + 1);
+#else
+            size_t len = measureJson(doc);
+            AsyncWebSocketMessageBuffer *buffer = this->webSocket->makeBuffer(len); //  creates a buffer (len + 1) for you.
 
-                this->_serialDebug->println("send json: " + String((char *) buffer->get()) + "\nsize: " + len);
+            if (buffer) {
+                serializeJson(doc, (char *) buffer->get(), len + 1);
+#endif
+                String print = F("send json: ");
+                //print += (char *) buffer->get();
+                print += F("\nsize: ");
+                print += len;
+                SerialDebug.println(print);
                 if (client != nullptr) {
                     client->text(buffer); // send data to one client
                 } else {
@@ -274,9 +267,9 @@ namespace WiFi_Portail_API {
         }
     }
 
-// send string to one client if defined else to all clients
+    // send string to one client if defined else to all clients
     void WebSocket::send(const String &data, AsyncWebSocketClient *client) {
-        if (this->webSocket->enabled() /*&& buffer == ""*/) {
+        if (this->webSocket->enabled()) {
             if (client != nullptr) {
                 client->text(data); // send data to one client
             } else {
@@ -285,12 +278,12 @@ namespace WiFi_Portail_API {
         }
     }
 
-// ---------------------------------------------------------------
-// convert to json with name of the request and result value
+    // ---------------------------------------------------------------
+    // convert to json with name of the request and result value
     void WebSocket::sendStringResultOf(const String &resultOfName, const String &result, AsyncWebSocketClient *client) {
-        //this->_serialDebug->println("sendStringResultOf: " +result + "\nsize: "+strlen(result.c_str()));
+        //SerialDebug.println("sendStringResultOf: " +result + "\nsize: "+strlen(result.c_str()));
         DynamicJsonDocument doc(JSON_OBJECT_SIZE(2) + strlen(result.c_str()) + 10);
-        doc[F("resultof")] = resultOfName;
+        doc[F("resultof")] = resultOfName.c_str();
         doc[F("value")] = result.c_str();
 
         //serializeJsonPretty(doc, Serial);
@@ -299,58 +292,53 @@ namespace WiFi_Portail_API {
     }
 
     void WebSocket::sendJsonResultOf(const String &resultOfName, const DynamicJsonDocument &result, AsyncWebSocketClient *client) {
-        //this->_serialDebug->println(F("sendJsonResultOf"));
-        //this->_serialDebug->println(result.memoryUsage());
-        //this->_serialDebug->println(measureJsonPretty(result));
+        //SerialDebug.println(F("sendJsonResultOf"));
+        //SerialDebug.println(result.memoryUsage());
+        //SerialDebug.println(measureJsonPretty(result));
         //serializeJsonPretty(result, Serial);
 
         DynamicJsonDocument doc(JSON_OBJECT_SIZE(2) + result.memoryUsage() + 100);
-        doc[F("resultof")] = resultOfName;
+        doc[F("resultof")] = resultOfName.c_str();
         doc[F("value")] = result.as<JsonObjectConst>();
 
         //serializeJsonPretty(doc, Serial);
 
         this->send(doc, client);
     }
-//-----------------------------------------------------------------------
+    //-----------------------------------------------------------------------
 
-/*
-// --------------------------------- envoi des informations au nouveau client ---------------------------------------
-void WebSocket::envoieAllInfosNewClient(uint32_t client_id)
-{
-    // ws_send_to_client(client_id, handlePositionsPredefine().c_str()); // send data to client
-    // ws_send_to_client(client_id, handleInfos().c_str()); // send data to client
-    // ws_send_to_client(client_id, handleHardwareInfos().c_str()); // send data to client
-}
-
-void WebSocket::envoieHardwareInfosToClient(uint32_t client_id)
-{
-    // ws_send_to_client(client_id, handleHardwareInfos().c_str()); // send data to client
-}
-
-void WebSocket::envoieValuesToClient(uint32_t client_id)
-{
-    // ws_send_to_client(client_id, handleInfos().c_str()); // send data to client
-}
-*/
-
-
-//--------------------------------------------- Status --------------------------------------------------
-    void WebSocket::handleCommandStatus(AsyncWebSocketClient * client, String value) {
-        this->_serialDebug->println(F("get status"));
-        if (this->_espInfos != nullptr) {
-            this->sendJsonResultOf(F("getStatus"),
-            this->_espInfos->toObj(), client);
-        }
-        else
-        {
-            this->send(F("ESP Infos not added to WebSocket !"), client);
-        }
+    /*
+    // --------------------------------- envoi des informations au nouveau client ---------------------------------------
+    void WebSocket::envoieAllInfosNewClient(uint32_t client_id)
+    {
+        // ws_send_to_client(client_id, handlePositionsPredefine().c_str()); // send data to client
+        // ws_send_to_client(client_id, handleInfos().c_str()); // send data to client
+        // ws_send_to_client(client_id, handleHardwareInfos().c_str()); // send data to client
     }
 
-//--------------------------------------------- Scan --------------------------------------------------
+    void WebSocket::envoieHardwareInfosToClient(uint32_t client_id)
+    {
+        // ws_send_to_client(client_id, handleHardwareInfos().c_str()); // send data to client
+    }
+
+    void WebSocket::envoieValuesToClient(uint32_t client_id)
+    {
+        // ws_send_to_client(client_id, handleInfos().c_str()); // send data to client
+    }
+    */
+
+
+    //--------------------------------------------- Status --------------------------------------------------
+    void WebSocket::handleCommandStatus(AsyncWebSocketClient * client, String value) {
+        SerialDebug.println(F("get status"));
+            this->sendJsonResultOf(F("getStatus"),
+            ESPInfos.toObj(), client);
+
+    }
+
+    //--------------------------------------------- Scan --------------------------------------------------
     void WebSocket::handleCommandScan(AsyncWebSocketClient *client, String value) {
-        this->_serialDebug->println(F("getScan"));
+        SerialDebug.println(F("getScan"));
         if (this->_webServer != nullptr) {
             WiFi.scanNetworksAsync(
                     [&](int networksFound) {
@@ -363,41 +351,29 @@ void WebSocket::envoieValuesToClient(uint32_t client_id)
         }
     }
 
-//--------------------------------------------- RealTime --------------------------------------------------
+    //--------------------------------------------- RealTime --------------------------------------------------
     void WebSocket::handleCommandRealTime(AsyncWebSocketClient *client, String value) {
-        this->_serialDebug->println(F("get realTime"));
+        SerialDebug.println(F("get realTime"));
 #ifdef USE_NTP
-        if (this->_ntp != nullptr) {
-            this->sendJsonResultOf(F("getRealTime"), this->_ntp->toObj()/*, client*/);// send to all client
-        } else {
-            this->send(F("NTP not added to WebSocket !"), client);
-        }
+        this->sendJsonResultOf(F("getRealTime"), NTPManager.toObj()/*, client*/);// send to all client
 #else
         this->send(F("NTP not added to WebSocket !"), client);
 #endif // USE_NTP
     }
 
-//--------------------------------------------- Network --------------------------------------------------
+    //--------------------------------------------- Network --------------------------------------------------
     void WebSocket::handleCommandNetwork(AsyncWebSocketClient *client, String value) {
-        this->_serialDebug->println(F("get network"));
-        if (this->_webServer->_wifiManager != nullptr) {
-            this->sendJsonResultOf(F("getNetwork"), this->_webServer->_wifiManager->getNetworkInfosJson(), client);
-        } else {
-            this->send(F("Wifi not added to WebSocket !"), client);
-        }
+        SerialDebug_println(F("get network"));
+        this->sendJsonResultOf(F("getNetwork"), WifiManager.getNetworkInfosJson(), client);
     }
 
-//--------------------------------------------- Files --------------------------------------------------
+    //--------------------------------------------- Files --------------------------------------------------
     void WebSocket::handleCommandFiles(AsyncWebSocketClient *client, String value) {
-        this->_serialDebug->println(F("get files"));
-        if (this->_webServer->_fileSystem != nullptr) {
-            String temp = this->_webServer->_fileSystem->getFilesListJson();
-            DynamicJsonDocument docTemp(JSON_OBJECT_SIZE(1) + JSON_ARRAY_SIZE(1) + strlen(temp.c_str()) * 2 + 10);
-            deserializeJson(docTemp, temp);
-            this->sendJsonResultOf(F("getFiles"), docTemp, client);
-        } else {
-            this->send(F("FileSystem not added to WebSocket !"), client);
-        }
+        SerialDebug_println(F("get files"));
+        String temp = FileSystem.getFilesListJson();
+        DynamicJsonDocument docTemp(JSON_OBJECT_SIZE(1) + JSON_ARRAY_SIZE(1) + strlen(temp.c_str()) * 2 + 10);
+        deserializeJson(docTemp, temp);
+        this->sendJsonResultOf(F("getFiles"), docTemp, client);
     }
 
 }

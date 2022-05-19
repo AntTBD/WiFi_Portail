@@ -5,7 +5,6 @@
 #ifndef TBD_WIFI_PORTAIL_SERIALDEBUG_H
 #define TBD_WIFI_PORTAIL_SERIALDEBUG_H
 
-#include <Arduino.h>
 #include "TBD_WiFi_Portail.h"
 
 // Using serial.print to debug a library https://forum.arduino.cc/t/using-serial-print-to-debug-a-library/141845/24
@@ -15,18 +14,18 @@
 #include <stdarg.h>
 
 namespace WiFi_Portail_API {
-    class SerialDebug {
+    class SerialDebugClass {
     public:
-        //SerialDebug();
-        //SerialDebug(HardwareSerial* port = &Serial);
-        //SerialDebug(HardwareSerial& port = Serial);
+        //SerialDebugClass();
+        //SerialDebugClass(HardwareSerial* port = &Serial);
+        //SerialDebugClass(HardwareSerial& port = Serial);
 
-        //SerialDebug(HardwareSerial& port = Serial);
-        SerialDebug(HardwareSerial &port = Serial, long baudRate = 115200, bool wifiDiagnostic = false);
+        //SerialDebugClass(HardwareSerial& port = Serial);
+        SerialDebugClass();
 
-        ~SerialDebug();
+        ~SerialDebugClass();
 
-        bool begin();
+        bool begin(HardwareSerial &port = Serial, long baudRate = 115200, bool wifiDiagnostic = false);
 
         void setDebug(bool debug);
 
@@ -87,12 +86,14 @@ namespace WiFi_Portail_API {
         HardwareSerial *_stream;
 
     private:
+
         long _baudRate;
         bool _wifiDiagnostic;
 
         bool _debug;
     };
+
+    extern SerialDebugClass SerialDebug;
 }
-//extern TBD_WiFi_Portail_SerialDebug _TBD_WiFi_Portail_SerialDebug;
 
 #endif //TBD_WIFI_PORTAIL_SERIALDEBUG_H

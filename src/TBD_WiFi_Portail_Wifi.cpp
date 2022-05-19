@@ -2,32 +2,31 @@
 // Created by antbd on 04/06/2021.
 //
 
+#include <functional>
+
 #include "TBD_WiFi_Portail_Wifi.h"
 namespace WiFi_Portail_API {
 
-    WifiManager::WifiManager(SerialDebug &serialDebug /*, FilesManager& filesManager*/, WiFiMode_t startMode,
-                             bool resetWifi) :
-            _serialDebug(&serialDebug) /*, _filesManager(&filesManager)*/
+    WifiManagerClass WifiManager;
+
+    WifiManagerClass::WifiManagerClass()
     {
 
         this->wifiAll = new WifiAll();
-        this->wifiAll->setMode(startMode);
-        this->wifiAll->setResetWifi(resetWifi);
         this->_connectTimeoutMs = 10000;
 
         this->_wifiDisconnectHandler = WiFi.onStationModeDisconnected(
                 //onWifiDisconnect
-                std::bind(&WifiManager::onWifiDisconnect, this, std::placeholders::_1));
+                std::bind(&WifiManagerClass::onWifiDisconnect, this, std::placeholders::_1));
         this->_wifiConnectHandler = WiFi.onStationModeConnected(
                 //onWifiConnect
-                std::bind(&WifiManager::onWifiConnect, this, std::placeholders::_1));
+                std::bind(&WifiManagerClass::onWifiConnect, this, std::placeholders::_1));
         this->_wifiOnStationModeGotIPHandler = WiFi.onStationModeGotIP(
                 //onWifiGotIP
-                std::bind(&WifiManager::onWifiGotIP, this, std::placeholders::_1));
+                std::bind(&WifiManagerClass::onWifiGotIP, this, std::placeholders::_1));
     }
 
-    WifiManager::~WifiManager() {
-        delete this->_serialDebug;
+    WifiManagerClass::~WifiManagerClass() {
         //delete this->_filesManager;
         delete this->wifiAll;
 
@@ -37,66 +36,69 @@ namespace WiFi_Portail_API {
         delete this->_wifiOnStationModeGotIPHandler;*/
     }
 
-    void WifiManager::begin() {
-        this->_serialDebug->println(F("====== Setup WiFi ======"));
+    void WifiManagerClass::begin(WiFiMode_t startMode, bool resetWifi) {
+        SerialDebug_println(F("====== Setup WiFi ======"));
+
+        this->wifiAll->setMode(startMode);
+        this->wifiAll->setResetWifi(resetWifi);
 
         this->disableWifi();
         WiFi.persistent(false);
 
         //  WiFi.setSleepMode(WIFI_NONE_SLEEP);
-        //  this->_serialDebug->println(F("WIFI_NONE_SLEEP"));
+        //  SerialDebug_println(F("WIFI_NONE_SLEEP"));
         if (this->wifiAll->getMode() == WIFI_STA) {
-            this->_serialDebug->println(F("STA: Start..."));
+            SerialDebug_println(F("STA: Start..."));
             if (this->connectSTA(this->wifiAll->getAllSTA(), this->wifiAll->getHostname(), this->_connectTimeoutMs) !=
                 true) {
-                this->_serialDebug->println(F("STA: Failed !"));
+                SerialDebug_println(F("STA: Failed !"));
                 delay(1000);
-                this->_serialDebug->println(F("AP: Start..."));
+                SerialDebug_println(F("AP: Start..."));
                 this->startAP(this->wifiAll->getAP());
             } else {
-                this->_serialDebug->println(F("STA: Started Good !"));
+                SerialDebug_println(F("STA: Started Good !"));
             }
         } else if (this->wifiAll->getMode() == WIFI_AP) {
-            this->_serialDebug->println(F("AP: Start..."));
+            SerialDebug_println(F("AP: Start..."));
             this->startAP(this->wifiAll->getAP());
         } else {
             this->disableWifi();
         }
 
         this->infosWifi();
-        this->_serialDebug->println(F("========================"));
+        SerialDebug_println(F("========================"));
     }
 
-    void WifiManager::onWifiConnect(const WiFiEventStationModeConnected &event) {
+    void WifiManagerClass::onWifiConnect(const WiFiEventStationModeConnected &event) {
         this->_wifiFlag = true;
-        this->_serialDebug->printf(F("\n[ INFO ] WiFi STA Connected to %s\n"), event.ssid.c_str());
+        SerialDebug_printf(F("\n[ INFO ] WiFi STA Connected to %s\n"), event.ssid.c_str());
     }
 
-    void WifiManager::onWifiDisconnect(const WiFiEventStationModeDisconnected &event) {
+    void WifiManagerClass::onWifiDisconnect(const WiFiEventStationModeDisconnected &event) {
         //mqttReconnectTimer.detach();
         if (this->_wifiFlag) {
-            this->_serialDebug->printf(F("[ INFO ] WiFi STA Disconnected from SSID : %s\n"), event.ssid.c_str());
-            this->_serialDebug->printf(F("Reason: %d\n"), event.reason);
+            SerialDebug_printf(F("[ INFO ] WiFi STA Disconnected from SSID : %s\n"), event.ssid.c_str());
+            SerialDebug_printf(F("Reason: %d\n"), event.reason);
             this->_wifiFlag = false;
-            ///        this->_serialDebug->println(F("[ INFO ] WiFi try to reconnect"));
+            ///        SerialDebug_println(F("[ INFO ] WiFi try to reconnect"));
             ///        this->begin();
         }
     }
 
-    void WifiManager::onWifiGotIP(const WiFiEventStationModeGotIP &event) {
+    void WifiManagerClass::onWifiGotIP(const WiFiEventStationModeGotIP &event) {
         this->_wifiFlag = true;
-        this->_serialDebug->println(F("\n[ INFO ] WiFi IP Connected"));
+        SerialDebug_println(F("\n[ INFO ] WiFi IP Connected"));
 
-        this->_serialDebug->printf(F("Got IP: %s\n"), event.ip.toString().c_str());
-        this->_serialDebug->printf(F("Connected: %s\n"), (WiFi.status() == WL_CONNECTED ? F("yes") : F("no")));
+        SerialDebug_printf(F("Got IP: %s\n"), event.ip.toString().c_str());
+        SerialDebug_printf(F("Connected: %s\n"), (WiFi.status() == WL_CONNECTED ? F("yes") : F("no")));
 
         //connectToMqtt();
         //writeEvent("INFO", "wifi", "Connected with IP", "onWifiGotIP");
     }
 
-    bool WifiManager::startAP(AP *ap) {
+    bool WifiManagerClass::startAP(AP *ap) {
         this->_inAPMode = true;
-        this->_serialDebug->println(F("[ INFO ] Configuring access point... "));
+        SerialDebug_println(F("[ INFO ] Configuring access point... "));
 
         if (this->wifiAll->getAP()->getSSID() != F("")) {
             ap->setConnected(false);
@@ -121,21 +123,21 @@ namespace WiFi_Portail_API {
                                                  (ap->isHide() ? 3 : 1), (ap->isHide() ? 1
                                                                                        : 0)); // 3rd param = channel : 3 when hide else default (1) / 4th param = hide or not
             ap->setConnected(this->_isWifiConnected);
-            this->_serialDebug->println(this->_isWifiConnected ? F("Ready") : F("Failed! => restarting..."));
+            SerialDebug_println(this->_isWifiConnected ? F("Ready") : F("Failed! => restarting..."));
             if (!this->_isWifiConnected) {
-                restartESP();
+                Utils.restartESP();
             }
         } else {
-            this->_serialDebug->println(F("Access point not configured ! "));
+            SerialDebug_println(F("Access point not configured ! "));
         }
 
         return this->_isWifiConnected;
     }
 
-// Fallback to AP Mode, so we can connect to ESP if there is no Internet connection
-    void WifiManager::fallbacktoAPMode() {
+    // Fallback to AP Mode, so we can connect to ESP if there is no Internet connection
+    void WifiManagerClass::fallbacktoAPMode() {
         this->_inAPMode = true;
-        this->_serialDebug->println(F("[ INFO ] ESP is running in Fallback AP Mode"));
+        SerialDebug_println(F("[ INFO ] ESP is running in Fallback AP Mode"));
 
         uint8_t macAddr[6];
         WiFi.softAPmacAddress(macAddr);
@@ -147,10 +149,10 @@ namespace WiFi_Portail_API {
         this->infosWifi();
     }
 
-// WiFi.config(clientip, gateway, subnet, dns);
-// Try to connect Wi-Fi
-    bool WifiManager::connectSTA(std::vector <STA> *allSTA, String hostname, uint32_t connectionTimeoutMUltiWifi) {
-        this->_serialDebug->println(F("[ INFO ] Trying to connect WiFi: "));
+    // WiFi.config(clientip, gateway, subnet, dns);
+    // Try to connect Wi-Fi
+    bool WifiManagerClass::connectSTA(std::vector <STA> *allSTA, String hostname, uint32_t connectionTimeoutMUltiWifi) {
+        SerialDebug_println(F("[ INFO ] Trying to connect WiFi: "));
 
         /*if(clientipChar != "" && subnetChar != "" && gatewayChar != "") {
           IPAddress clientip;
@@ -187,20 +189,20 @@ namespace WiFi_Portail_API {
             oneSTA.setConnected(false);
             this->_wifiMulti.addAP(oneSTA.getSSID().c_str(), oneSTA.getPassword().c_str());
             bool added = this->_wifiMulti.existsAP(oneSTA.getSSID().c_str(), oneSTA.getPassword().c_str());
-            this->_serialDebug->print(F("[ INFO ] '"));
-            this->_serialDebug->print(oneSTA.getSSID());
-            this->_serialDebug->print(F("' "));
-            this->_serialDebug->print(added ? F("added") : F("failed to add"));
-            this->_serialDebug->println(F(" to the list of wifiMulti."));
+            SerialDebug_print(F("[ INFO ] '"));
+            SerialDebug_print(oneSTA.getSSID());
+            SerialDebug_print(F("' "));
+            SerialDebug_print(added ? F("added") : F("failed to add"));
+            SerialDebug_println(F(" to the list of wifiMulti."));
         }
 
-        this->_serialDebug->println(F("Wait for the end of the connection time."));
-        this->_serialDebug->println(F("Trying to connect to the best wifi signal (RSSI)..."));
+        SerialDebug_println(F("Wait for the end of the connection time."));
+        SerialDebug_println(F("Trying to connect to the best wifi signal (RSSI)..."));
 
         auto startTime = millis();
         while (this->_wifiMulti.run(connectionTimeoutMUltiWifi) != WL_CONNECTED &&
                (millis() - startTime) <= connectionTimeoutMUltiWifi) {
-            this->_serialDebug->print(F("#"));
+            SerialDebug_print(F("#"));
             //yield();
             delay(1000);
         }
@@ -216,86 +218,124 @@ namespace WiFi_Portail_API {
             return true;
         } else {
             // We couln't connect, time is out, inform
-            this->_serialDebug->println();
-            this->_serialDebug->println(F("[ WARN ] Couldn't connect in time (STA mode)"));
+            SerialDebug_println();
+            SerialDebug_println(F("[ WARN ] Couldn't connect in time (STA mode)"));
             return false;
         }
     }
 
-    void WifiManager::infosWifi() {
-        this->_serialDebug->println(F("------------ WIFI INFO ---------------"));
-        this->_serialDebug->print(F("WiFi status :            "));
-        this->_serialDebug->println(this->wifiStatusToString());
+    void WifiManagerClass::infosWifi() {
+        String string;
+        string.reserve(500);
+        string += F("------------ WIFI INFO ---------------");
+        string += F("\n");
+        string += F("WiFi status :            ");
+        string += this->wifiStatusToString();
+        string += F("\n");
 
         switch (WiFi.getMode()) {
             case WIFI_OFF: // = 0
-                this->_serialDebug->println(F("Wifi Mode :              OFF"));
+                string += F("WiFi mode :              OFF");
+                string += F("\n");
                 break;
             case WIFI_STA: // = 1
-                this->_serialDebug->println(F("Wifi Mode :              STA"));
-                this->_serialDebug->print(F("Hostname:                "));
-                this->_serialDebug->println(WiFi.hostname());
-                this->_serialDebug->print(F("Connected to:            "));
-                this->_serialDebug->println(WiFi.SSID()); // Tell us what network we're connected to
-                //this->_serialDebug->print(F("WiFi password:           ")); this->_serialDebug->println(WiFi.psk()); // Print the password used to connect ESP8266
-                this->_serialDebug->print(F("IP address:              "));
-                this->_serialDebug->println(WiFi.localIP().toString()); // Print the IP address
-                this->_serialDebug->print(F("MAC address:             "));
-                this->_serialDebug->println(WiFi.macAddress()); // Print the MAC address
-                this->_serialDebug->print(F("Channel:                 "));
-                this->_serialDebug->println(WiFi.channel()); // Print the channel of wifi
-                this->_serialDebug->print(F("Signal strength (RSSI):  "));
-                this->_serialDebug->print(WiFi.RSSI());
-                this->_serialDebug->println(F(" dBm")); // Print the received signal strength
+                string += F("WiFi mode :              STA");
+                string += F("\n");
+                string += F("Hostname:                ");
+                string += WiFi.hostname();
+                string += F("\n");
+                string += F("Connected to:            ");
+                string += WiFi.SSID(); // Tell us what network we're connected to
+                string += F("\n");
+                //string += F("WiFi password:           ");
+                //string += WiFi.psk(); // Print the password used to connect ESP8266
+                //string += F("\n");
+                string += F("IP address:              ");
+                string += WiFi.localIP().toString(); // Print the IP address
+                string += F("\n");
+                string += F("MAC address:             ");
+                string += WiFi.macAddress(); // Print the MAC address
+                string += F("\n");
+                string += F("Channel:                 ");
+                string += WiFi.channel(); // Print the channel of wifi
+                string += F("\n");
+                string += F("Signal strength (RSSI):  ");
+                string += WiFi.RSSI();
+                string += F(" dBm"); // Print the received signal strength
+                string += F("\n");
                 break;
             case WIFI_AP: // = 2
-                this->_serialDebug->println(F("Wifi Mode :              AP"));
-                this->_serialDebug->print(F("AP Name:                 "));
-                this->_serialDebug->println(WiFi.softAPSSID()); // Tell us what network we're connected to
-                //this->_serialDebug->print(F("AP password:             ")); this->_serialDebug->println(WiFi.softAPPSK()); // Print the password used to connect ESP8266
-                this->_serialDebug->print(F("AP IP address:           "));
-                this->_serialDebug->println(WiFi.softAPIP().toString()); // Print the IP address
-                this->_serialDebug->print(F("AP MAC address:          "));
-                this->_serialDebug->println(WiFi.softAPmacAddress()); // Print the MAC address
-                this->_serialDebug->print(F("AP Channel:              "));
-                this->_serialDebug->println(WiFi.channel()); // Print the channel of wifi
+                string += F("WiFi mode :              AP");
+                string += F("\n");
+                string += F("AP Name:                 ");
+                string += WiFi.softAPSSID(); // Tell us what network we're connected to
+                string += F("\n");
+                //string += F("AP password:             ");
+                //string += WiFi.softAPPSK(); // Print the password used to connect ESP8266
+                //string += F("\n");
+                string += F("AP IP address:           ");
+                string += WiFi.softAPIP().toString(); // Print the IP address
+                string += F("\n");
+                string += F("AP MAC address:          ");
+                string += WiFi.softAPmacAddress(); // Print the MAC address
+                string += F("\n");
+                string += F("AP Channel:              ");
+                string += WiFi.channel(); // Print the channel of wifi
+                string += F("\n");
                 break;
             case WIFI_AP_STA: // = 3
-                this->_serialDebug->println(F("Wifi Mode :              AP & STA"));
-                this->_serialDebug->print(F("AP Name:                 "));
-                this->_serialDebug->println(WiFi.softAPSSID()); // Tell us what network we're connected to
-                //this->_serialDebug->print(F("AP password:             ")); this->_serialDebug->println(WiFi.softAPPSK()); // Print the password used to connect ESP8266
-                this->_serialDebug->print(F("AP IP address:           "));
-                this->_serialDebug->println(WiFi.softAPIP().toString()); // Print the IP address
-                this->_serialDebug->print(F("AP MAC address:          "));
-                this->_serialDebug->println(WiFi.softAPmacAddress()); // Print the MAC address
-                this->_serialDebug->print(F("AP Channel:              "));
-                this->_serialDebug->println(WiFi.channel()); // Print the channel of wifi
-                this->_serialDebug->println(F("                -------------------"));
-                this->_serialDebug->print(F("Hostname:                "));
-                this->_serialDebug->println(WiFi.hostname());
-                this->_serialDebug->print(F("Connected to:            "));
-                this->_serialDebug->println(WiFi.SSID()); // Tell us what network we're connected to
-                //this->_serialDebug->print(F("WiFi password:           ")); this->_serialDebug->println(WiFi.psk()); // Print the password used to connect ESP8266
-                this->_serialDebug->print(F("IP address:              "));
-                this->_serialDebug->println(WiFi.localIP().toString()); // Print the IP address
-                this->_serialDebug->print(F("MAC address:             "));
-                this->_serialDebug->println(WiFi.macAddress()); // Print the MAC address
-                this->_serialDebug->print(F("Channel:                 "));
-                this->_serialDebug->println(WiFi.channel()); // Print the channel of wifi
-                this->_serialDebug->print(F("Signal strength (RSSI):  "));
-                this->_serialDebug->print(WiFi.RSSI());
-                this->_serialDebug->println(" dBm"); // Print the received signal strength
+                string += F("Wifi Mode :              AP & STA\n");
+                string += F("AP Name:                 ");
+                string += WiFi.softAPSSID(); // Tell us what network we're connected to
+                string += F("\n");
+                //string += F("AP password:             ");
+                //string += WiFi.softAPPSK(); // Print the password used to connect ESP8266
+                //string += F("\n");
+                string += F("AP IP address:           ");
+                string += WiFi.softAPIP().toString(); // Print the IP address
+                string += F("\n");
+                string += F("AP MAC address:          ");
+                string += WiFi.softAPmacAddress(); // Print the MAC address
+                string += F("\n");
+                string += F("AP Channel:              ");
+                string += WiFi.channel(); // Print the channel of wifi
+                string += F("\n");
+                string += F("                -------------------\n");
+                string += F("Hostname:                ");
+                string += WiFi.hostname();
+                string += F("\n");
+                string += F("Connected to:            ");
+                string += WiFi.SSID(); // Tell us what network we're connected to
+                string += F("\n");
+                //string += F("WiFi password:           ");
+                //string += WiFi.psk(); // Print the password used to connect ESP8266
+                //string += F("\n");
+                string += F("IP address:              ");
+                string += WiFi.localIP().toString(); // Print the IP address
+                string += F("\n");
+                string += F("MAC address:             ");
+                string += WiFi.macAddress(); // Print the MAC address
+                string += F("\n");
+                string += F("Channel:                 ");
+                string += WiFi.channel(); // Print the channel of wifi
+                string += F("\n");
+                string += F("Signal strength (RSSI):  ");
+                string += WiFi.RSSI();
+                string += F(" dBm");
+                string += F("\n");
                 break;
             default:
-                this->_serialDebug->print(F("Mode none recognised : "));
-                this->_serialDebug->println(WiFi.getMode());
+                string += F("Mode none recognised : ");
+                string += WiFi.getMode();
+                string += F("\n");
                 break;
         }
-        this->_serialDebug->println(F("--------------------------------------"));
+        string += F("--------------------------------------");
+        string += F("\n");
+        SerialDebug_println(string);
     }
 
-    String WifiManager::wifiStatusToString() const {
+    String WifiManagerClass::wifiStatusToString() const {
         String status = F("");
         switch (WiFi.status()) {
             case WL_NO_SHIELD: // = 255   // for compatibility with WiFi Shield library
@@ -330,11 +370,11 @@ namespace WiFi_Portail_API {
     }
 
 /// Convert all infos to JSON sorted by devices datas and network datas
-    DynamicJsonDocument WifiManager::getNetworkInfosJson() {
-        //    this->_serialDebug->println("tata");
-        //this->_serialDebug->println(this->wifiAll->toString().c_str());
+    DynamicJsonDocument WifiManagerClass::getNetworkInfosJson() {
+        //    SerialDebug_println("tata");
+        //SerialDebug_println(this->wifiAll->toString().c_str());
         String serializedWifiAll = this->wifiAll->serializedForSend();
-        //this->_serialDebug->println(serializedWifiAll.length() + " " + serializedWifiAll);
+        //SerialDebug_println(serializedWifiAll.length() + " " + serializedWifiAll);
 
         DynamicJsonDocument doc(
                 /*JSON_OBJECT_SIZE(2) +
@@ -349,8 +389,8 @@ namespace WiFi_Portail_API {
         DeserializationError error = deserializeJson(doc, serializedWifiAll);
 
         if (error) {
-            this->_serialDebug->print(F("deserializeJson() failed: "));
-            this->_serialDebug->println(error.f_str());
+            SerialDebug_print(F("deserializeJson() failed: "));
+            SerialDebug_println(error.f_str());
         }
         serializedWifiAll = String();
 
@@ -360,7 +400,7 @@ namespace WiFi_Portail_API {
     }
 
 /// Convert all infos to JSON and then to string
-    String WifiManager::getNetworkInfosString() {
+    String WifiManagerClass::getNetworkInfosString() {
         String jsonStringWifiInfos;
         jsonStringWifiInfos.reserve(2000);
         serializeJsonPretty(this->getNetworkInfosJson(),
@@ -370,8 +410,8 @@ namespace WiFi_Portail_API {
     }
 
 //-----------------------------------------------------------
-    void WifiManager::disableWifi() {
-        this->_serialDebug->println(F("Turn wifi off."));
+    void WifiManagerClass::disableWifi() {
+    SerialDebug_println(F("Turn wifi off."));
         this->_isWifiConnected = false;
         this->_inAPMode = false;
         WiFi.disconnect(true);
@@ -381,16 +421,16 @@ namespace WiFi_Portail_API {
         WiFi.mode(WIFI_OFF);
     }
 
-    void WifiManager::enableWifi() {
-        this->_serialDebug->println(F("[ INFO ] Restarting the board to connect wi-fi again"));
-        restartESP();
+    void WifiManagerClass::enableWifi() {
+        SerialDebug_println(F("[ INFO ] Restarting the board to connect wi-fi again"));
+        Utils.restartESP();
     }
 
-    void WifiManager::resetWifi() {
+    void WifiManagerClass::resetWifi() {
         this->wifiAll->setResetWifi(true);
         /// TODO : found other way to do the same save
-        //this->_filesManager->saveConfigAllWifi();
+        //FilesManager.saveConfigAllWifi();
 
-        restartESP();
+        Utils.restartESP();
     }
 }

@@ -5,7 +5,7 @@
 #include "TBD_WiFi_Portail_Package.h"
 
 namespace WiFi_Portail_API {
-    Package::Package() : nameProject(""), versionProject(""), description(""), author(""), lastModification(""), license("") {}
+    Package::Package() : nameProject(F("")), versionProject(F("")), description(F("")), author(F("")), lastModification(F("")), license(F("")) {}
 
     Package::~Package() {}
 
@@ -58,13 +58,28 @@ namespace WiFi_Portail_API {
     }
 
     String Package::toString() const {
-        return (String) F("====== configProject ======") + F("\n")
-               + F("Name :                ") + this->getNameProject() + F("\n")
-               + F("Version :             ") + this->getVersionProject() + F("\n")
-               + F("Description :         ") + this->getDescription() + F("\n")
-               + F("Author :              ") + this->getAuthor() + F("\n")
-               + F("Last modification :   ") + this->getLastModification() + F("\n")
-               + F("License :             ") + this->getLicense() + F("\n")
-               + F("===========================");
+        String result;
+        result += F("====== configProject ======");
+        result += F("\n");
+        result += F("Name:                ");
+        result += this->getNameProject();
+        result += F("\n");
+        result += F("Version:             ");
+        result += this->getVersionProject();
+        result += F("\n");
+        result += F("Description:         ");
+        result += this->getDescription();
+        result += F("\n");
+        result += F("Author:              ");
+        result += this->getAuthor();
+        result += F("\n");
+        result += F("Last modification:   ");
+        result += this->getLastModification();
+        result += F("\n");
+        result += F("License:             ");
+        result += this->getLicense();
+        result += F("\n");
+        result += F("===========================");
+        return result;
     };
 }

@@ -5,19 +5,25 @@
 #include "TBD_WiFi_Portail_SerialDebug.h"
 
 namespace WiFi_Portail_API {
-//SerialDebug::SerialDebug(): _stream(&Serial) {}
-//SerialDebug::SerialDebug(HardwareSerial* port): _stream(port) {}
-//SerialDebug::SerialDebug(HardwareSerial& port): _stream(&port) {}
-    SerialDebug::SerialDebug(HardwareSerial &port, long baudRate, bool wifiDiagnostic) :
-    _stream(&port), _baudRate(baudRate), _wifiDiagnostic(wifiDiagnostic) {
+    SerialDebugClass SerialDebug;
+
+//SerialDebugClass::SerialDebugClass(): _stream(&Serial) {}
+//SerialDebugClass::SerialDebugClass(HardwareSerial* port): _stream(port) {}
+//SerialDebugClass::SerialDebugClass(HardwareSerial& port): _stream(&port) {}
+    SerialDebugClass::SerialDebugClass() {
         this->_debug = true;
     }
 
-    SerialDebug::~SerialDebug() {
+    SerialDebugClass::~SerialDebugClass() {
         delete this->_stream;
     }
 
-    bool SerialDebug::begin() {
+    bool SerialDebugClass::begin(HardwareSerial &port, long baudRate, bool wifiDiagnostic)
+    {
+        this->_stream = &port;
+        this->_baudRate = baudRate;
+        this->_wifiDiagnostic = wifiDiagnostic;
+
         if (this->_stream) {
             this->_stream->begin(_baudRate);                // We use a communication at 115200 bds by default
             this->_stream->setDebugOutput(
@@ -40,85 +46,85 @@ namespace WiFi_Portail_API {
         return false;
     }
 
-    void SerialDebug::setDebug(bool debug) {
+    void SerialDebugClass::setDebug(bool debug) {
         this->_debug = debug;
         this->println((String) F("Set Serial Debug to : ") + this->_debug);
     }
 
-    bool SerialDebug::getDebug() const {
+    bool SerialDebugClass::getDebug() const {
         return this->_debug;
     }
 
-    size_t SerialDebug::print(const __FlashStringHelper *ifsh) {
+    size_t SerialDebugClass::print(const __FlashStringHelper *ifsh) {
         if (this->_stream && this->_debug) {
             return this->_stream->print(ifsh);
         }
         return 0;
     }
 
-    size_t SerialDebug::print(const String &s) {
+    size_t SerialDebugClass::print(const String &s) {
         if (this->_stream && this->_debug) {
             return this->_stream->print(s);
         }
         return 0;
     }
 
-/*size_t SerialDebug::print(String s) {
+/*size_t SerialDebugClass::print(String s) {
     if(this->_stream && this->_debug) {
         return this->_stream->print(s);
     }
     return 0;
 }*/
-    size_t SerialDebug::print(const char *str) {
+    size_t SerialDebugClass::print(const char *str) {
         if (this->_stream && this->_debug) {
             return this->_stream->print(str);
         }
         return 0;
     }
 
-    size_t SerialDebug::print(char c) {
+    size_t SerialDebugClass::print(char c) {
         if (this->_stream && this->_debug) {
             return this->_stream->print(c);
         }
         return 0;
     }
 
-    size_t SerialDebug::print(unsigned char n, int base) {
+    size_t SerialDebugClass::print(unsigned char n, int base) {
         if (this->_stream && this->_debug) {
             return this->_stream->print(n, base);
         }
         return 0;
     }
 
-    size_t SerialDebug::print(int n, int base) {
+    size_t SerialDebugClass::print(int n, int base) {
         if (this->_stream && this->_debug) {
             return this->_stream->print(n, base);
         }
         return 0;
     }
 
-    size_t SerialDebug::print(unsigned int n, int base) {
+    size_t SerialDebugClass::print(unsigned int n, int base) {
         if (this->_stream && this->_debug) {
             return this->_stream->print(n, base);
         }
         return 0;
     }
 
-    size_t SerialDebug::print(long n, int base) {
+    size_t SerialDebugClass::print(long n, int base) {
         if (this->_stream && this->_debug) {
             return this->_stream->print(n, base);
         }
         return 0;
     }
 
-    size_t SerialDebug::print(unsigned long n, int base) {
+    size_t SerialDebugClass::print(unsigned long n, int base) {
         if (this->_stream && this->_debug) {
             return this->_stream->print(n, base);
         }
         return 0;
     }
 
-    size_t SerialDebug::print(double n, int digits) {
+    size_t SerialDebugClass::print(double n, int digits) {
         if (this->_stream && this->_debug) {
             return this->_stream->print(n, digits);
         }
@@ -127,83 +133,83 @@ namespace WiFi_Portail_API {
 
 //------------------------------------------------------------------------------------------
 
-    size_t SerialDebug::println(const __FlashStringHelper *ifsh) {
+    size_t SerialDebugClass::println(const __FlashStringHelper *ifsh) {
         if (this->_stream && this->_debug) {
             return this->_stream->println(ifsh);
         }
         return 0;
     }
 
-    size_t SerialDebug::println(const String &s) {
+    size_t SerialDebugClass::println(const String &s) {
         if (this->_stream && this->_debug) {
             return this->_stream->println(s);
         }
         return 0;
     }
 
-/*size_t SerialDebug::println(String s) {
+/*size_t SerialDebugClass::println(String s) {
     if(this->_stream) {
         return this->_stream->println(s);
     }
     return 0;
 }*/
-    size_t SerialDebug::println(const char *str) {
+    size_t SerialDebugClass::println(const char *str) {
         if (this->_stream && this->_debug) {
             return this->_stream->println(str);
         }
         return 0;
     }
 
-    size_t SerialDebug::println(char c) {
+    size_t SerialDebugClass::println(char c) {
         if (this->_stream && this->_debug) {
             return this->_stream->println(c);
         }
         return 0;
     }
 
-    size_t SerialDebug::println(unsigned char n, int base) {
+    size_t SerialDebugClass::println(unsigned char n, int base) {
         if (this->_stream && this->_debug) {
             return this->_stream->println(n, base);
         }
         return 0;
     }
 
-    size_t SerialDebug::println(int n, int base) {
+    size_t SerialDebugClass::println(int n, int base) {
         if (this->_stream && this->_debug) {
             return this->_stream->println(n, base);
         }
         return 0;
     }
 
-    size_t SerialDebug::println(unsigned int n, int base) {
+    size_t SerialDebugClass::println(unsigned int n, int base) {
         if (this->_stream && this->_debug) {
             return this->_stream->println(n, base);
         }
         return 0;
     }
 
-    size_t SerialDebug::println(long n, int base) {
+    size_t SerialDebugClass::println(long n, int base) {
         if (this->_stream && this->_debug) {
             return this->_stream->println(n, base);
         }
         return 0;
     }
 
-    size_t SerialDebug::println(unsigned long n, int base) {
+    size_t SerialDebugClass::println(unsigned long n, int base) {
         if (this->_stream && this->_debug) {
             return this->_stream->println(n, base);
         }
         return 0;
     }
 
-    size_t SerialDebug::println(double n, int digits) {
+    size_t SerialDebugClass::println(double n, int digits) {
         if (this->_stream && this->_debug) {
             return this->_stream->println(n, digits);
         }
         return 0;
     }
 
-    size_t SerialDebug::println(void) {
+    size_t SerialDebugClass::println(void) {
         if (this->_stream && this->_debug) {
             return this->_stream->println();
         }
@@ -214,7 +220,7 @@ namespace WiFi_Portail_API {
 
 //Creating a printf() wrapper https://playground.arduino.cc/Main/Printf/
 
-    size_t SerialDebug::printf(const char *fmt, ...) {
+    size_t SerialDebugClass::printf(const char *fmt, ...) {
         if (this->_stream && this->_debug) {
 
             char buf[256]; // resulting string limited to 128 chars
@@ -227,7 +233,7 @@ namespace WiFi_Portail_API {
         return 0;
     }
 
-    size_t SerialDebug::printf(const __FlashStringHelper *fmt, ...) {
+    size_t SerialDebugClass::printf(const __FlashStringHelper *fmt, ...) {
         if (this->_stream && this->_debug) {
             char buf[256]; // resulting string limited to 128 chars
             va_list args;
@@ -243,7 +249,7 @@ namespace WiFi_Portail_API {
         return 0;
     }
 
-    HardwareSerial *SerialDebug::getSerial() {
+    HardwareSerial *SerialDebugClass::getSerial() {
         return this->_stream;
     }
 }
