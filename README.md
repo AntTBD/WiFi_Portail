@@ -2,7 +2,7 @@
 
 Library to get a portail to configure WiFi, NTP, ...
 
-Thanks to differents class to configure Serial, FileSystem, a Files Manager, multiple WiFi, MDNS, FTP server, WebServer server, WebSocket server, WebEvents server (user & admin)
+Thanks to different class to configure Serial, FileSystem, a Files Manager, multiple WiFi, MDNS, a FTP server, WebServer server, WebSocket server, WebEvents server (user & admin), OTA upload, NTP server
 
 [comment]: <> (<div align="center">)
 
@@ -61,3 +61,51 @@ Thanks to differents class to configure Serial, FileSystem, a Files Manager, mul
 
 [comment]: <> (<a href="https://github.com/AntTBD/WiFi_Portail/graphs/contributors"><img src="https://opencollective.com/WiFi_Portail/contributors.svg?width=890&button=false" /></a>)
 
+<!--
+## Instructions for NTP update lib with ESP8266 v3.0.2
+In **NTPClientLib.h**, at line **501**, replace:
+
+`bool summertime (int year, byte month, byte day, byte hour, byte weekday, byte tzHours);`
+
+by:
+```c++
+    bool summertime (int year, uint8_t month, uint8_t day, uint8_t hour, uint8_t weekday, uint8_t tzHours);
+```
+And in **NTPClientLib.cpp**, at line **645**, replace:
+
+`bool NTPClient::summertime (int year, byte month, byte day, byte hour, byte weekday, byte tzHours)`
+
+by:
+```c++
+bool NTPClient::summertime (int year, uint8_t month, uint8_t day, uint8_t hour, uint8_t weekday, uint8_t tzHours)
+```
+-->
+
+## Instructions for secure https connection
+
+1. Generate key pairs (certificate) to **data folder** in the sketch directory. Don't forget to change **CN= with your Domain name** in the under lying codes.
+>    * `openssl genrsa -out Key.pem 1024`
+>    * `openssl req -x509 -out Cert.pem -key Key.pem -new -sha256 -subj /CN=your.domain -addext "keyUsage=digitalSignature,keyEncipherment" -addext extendedKeyUsage=serverAuth`
+> 
+> 
+2. In ESPAsyncTCP.h, change the following line 1323-1324:
+>   ```c++
+>   if(p->pb)
+>       c->_recv(pcb, p->pb, 0);
+>   ```
+>   to:
+>   ```c++
+>   if(p->pb)
+>   {
+>       auto errorTracker = c->getACErrorTracker();
+>       c->_recv(errorTracker, pcb, p->pb, 0);
+>   }
+>   ```
+>   
+3. In ESPAsyncTCP/src/async_config.h, edit the first lines (4 to 6):
+> ```c++
+> /*#ifndef ASYNC_TCP_SSL_ENABLED
+> #define ASYNC_TCP_SSL_ENABLED 0  // original
+> #endif*/
+> #define ASYNC_TCP_SSL_ENABLED 1
+> ```
