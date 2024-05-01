@@ -186,7 +186,7 @@ namespace WiFi_Portail_API {
     {
         AsyncJsonResponse * response = new AsyncJsonResponse();// true if is array
         response->addHeader("Server","ESP Async Web Server");
-        JsonObject& root = response->getRoot();
+        ArduinoJson6194_F1::VariantRef root = response->getRoot();
         root[F("resultof")] = resultOfName.c_str();
         root[F("value")] = json.as<JsonObject>();
         response->setLength();
