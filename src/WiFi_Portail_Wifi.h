@@ -5,7 +5,7 @@
 #ifndef TBD_WIFI_PORTAIL_WIFI_H
 #define TBD_WIFI_PORTAIL_WIFI_H
 
-#include "TBD_WiFi_Portail.h"
+#include "WiFi_Portail.h"
 #include "WifiAll.h"
 
 #include <ESP8266WiFi.h> //ESP8266 Core WiFi Library (you most likely already have this in your sketch)

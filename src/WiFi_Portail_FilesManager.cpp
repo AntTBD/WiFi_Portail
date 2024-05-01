@@ -2,16 +2,19 @@
 // Created by antbd on 05/06/2021.
 //
 
-#include "TBD_WiFi_Portail_FilesManager.h"
+#include "WiFi_Portail_FilesManager.h"
 
 namespace WiFi_Portail_API {
     FilesManagerClass FilesManager;
 
     FilesManagerClass::FilesManagerClass() {
-        this->_listOfConfigFiles = {{package,       F("/package.txt")},
-                                    {configAllWifi, F("/configAllWifi.txt")},
-                                    {configFTP,     F("/configFTP.txt")},
-                                    {configOTA,     F("/configOTA.txt")}};
+        this->_listOfConfigFiles = {
+                {package,       F("/package.txt")},
+                {configAllWifi, F("/configAllWifi.txt")},
+                {configFTP,     F("/configFTP.txt")},
+                {configOTA,     F("/configOTA.txt")},
+                {configNTP,     F("/configNTP.txt")}
+        };
         this->_package = new Package();
     }
 
@@ -41,31 +44,45 @@ namespace WiFi_Portail_API {
     void FilesManagerClass::loadConfigFile(int indice) {
         switch (indice) {
             case package:
-                this->loadConfigProject(this->_listOfConfigFiles.at(package), this->_package);
+                this->loadConfigProject(this->getFileName(package), this->_package);
                 break;
             case configAllWifi:
-                this->loadConfigAllWifi(this->_listOfConfigFiles.at(configAllWifi), WifiManager.wifiAll);
+                this->loadConfigAllWifi(this->getFileName(configAllWifi), WifiManager.wifiAll);
                 break;
 #ifdef USE_FTP
             case configFTP:
-                this->loadConfigFTP(this->_listOfConfigFiles.at(configFTP));
+                this->loadConfigFTP(this->getFileName(configFTP));
                 break;
 #endif // USE_FTP
 #ifdef USE_OTA
             case configOTA:
-                this->loadConfigOTA(this->_listOfConfigFiles.at(configOTA));
+                this->loadConfigOTA(this->getFileName(configOTA));
                 break;
 #endif // USE_OTA
+#ifdef USE_NTP
+            case configNTP:
+                this->loadConfigNTP(this->getFileName(configNTP));
+                break;
+#endif // USE_NTP
             default:
                 SerialDebug_println(F("Config File function not found !"));
                 break;
         }
     }
 
+    String FilesManagerClass::getFileName(int indice) const {
+        if (indice < this->_listOfConfigFiles.size()) {
+            return this->_listOfConfigFiles.at(indice);
+        }
+        else {
+            return F("");
+        }
+    }
+
 // -------------------------------------------- Load config project ------------------------------------------------
     void FilesManagerClass::loadConfigProject(const String &filename, Package *package) {
         DynamicJsonDocument doc(JSON_OBJECT_SIZE(6) + 350);
-        JsonObject obj = this->getJSonFromFile(&doc, filename);
+        JsonObject obj = this->getJsonFromFile(&doc, filename);
 
         JsonVariant error = obj[F("version")];
         if (error.isNull()) {
@@ -93,7 +110,7 @@ namespace WiFi_Portail_API {
     void FilesManagerClass::loadConfigAllWifi(const String &filename, WifiAll *wifiAll) {
         DynamicJsonDocument doc(
                 JSON_OBJECT_SIZE(6) + JSON_OBJECT_SIZE(6) + JSON_ARRAY_SIZE(1) + 10 * (JSON_OBJECT_SIZE(8) + 25));
-        JsonObjectConst obj = this->getJSonFromFile(&doc, filename);
+        JsonObjectConst obj = this->getJsonFromFile(&doc, filename);
 
         SerialDebug_println(F("/!\\ Be carefull : you can load 10 STA config max !"));
 
@@ -164,7 +181,7 @@ namespace WiFi_Portail_API {
 #ifdef USE_FTP
     void FilesManagerClass::loadConfigFTP(const String &filename) {
         DynamicJsonDocument doc(JSON_OBJECT_SIZE(2) + 100);
-        JsonObject obj = this->getJSonFromFile(&doc, filename);
+        JsonObject obj = this->getJsonFromFile(&doc, filename);
 
         JsonVariant error = obj[F("user")];
         if (error.isNull()) {
@@ -185,7 +202,7 @@ namespace WiFi_Portail_API {
 #ifdef USE_OTA
     void FilesManagerClass::loadConfigOTA(const String &filename) {
         DynamicJsonDocument doc(JSON_OBJECT_SIZE(2) + 100);
-        JsonObject obj = this->getJSonFromFile(&doc, filename);
+        JsonObject obj = this->getJsonFromFile(&doc, filename);
 
         JsonVariant error = obj[F("hostname")];
         if (error.isNull()) {
@@ -202,6 +219,40 @@ namespace WiFi_Portail_API {
     }
 #endif // USE_OTA
 
+#ifdef USE_NTP
+    void FilesManagerClass::loadConfigNTP(const String &filename) {
+        DynamicJsonDocument doc(JSON_OBJECT_SIZE(4) + 100);
+        JsonObject obj = this->getJsonFromFile(&doc, filename);
+
+        JsonVariant error = obj[F("ntpServer")];
+        if (error.isNull()) {
+            SerialDebug_println(F("JsonObject not corresponding => config not loaded"));
+            return;
+        }
+
+        if (obj[F("ntpServer")])
+            NTPManager.setNtpServerName(obj[F("ntpServer")].as<String>());
+        if (obj[F("timeZone")])
+            NTPManager.setTimeZone(obj[F("timeZone")].as<float>());
+        if (obj[F("interval")])
+            NTPManager.setInterval(obj[F("interval")].as<float>());
+        if (obj[F("isSummerTime")])
+            NTPManager.setDayLight(obj[F("isSummerTime")].as<bool>());
+
+        SerialDebug_println(NTPManager.toString());
+    }
+#endif // USE_NTP
+
+// -----------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------
+
+// ---------------------------------------------- Save config NTP --------------------------------------------------
+#ifdef USE_NTP
+    bool FilesManagerClass::saveConfigNTP(DynamicJsonDocument *result) {
+        return this->saveJsonToFile(result, this->getFileName(configNTP));
+    }
+#endif // USE_NTP
 // -----------------------------------------------------------------------------------------------------------------
 // -----------------------------------------------------------------------------------------------------------------
 // -----------------------------------------------------------------------------------------------------------------
@@ -243,7 +294,7 @@ namespace WiFi_Portail_API {
     }
 
 // --------------------------------- Function to serialize in a file of filesystem -----------------------------------
-    bool FilesManagerClass::saveJSonToAFile(DynamicJsonDocument *doc, const String &filename) {
+    bool FilesManagerClass::saveJsonToFile(DynamicJsonDocument *doc, const String &filename) {
         // open the file. note that only one file can be open at a time,
         // so you have to close this one before opening another.
         SerialDebug_println(F("Open file in writing mode"));
@@ -274,7 +325,7 @@ namespace WiFi_Portail_API {
     }
 
 // -------------------------------- Function to deserialize file from filesystem ---------------------------------------
-    JsonObject FilesManagerClass::getJSonFromFile(DynamicJsonDocument *doc, const String &filename) {
+    JsonObject FilesManagerClass::getJsonFromFile(DynamicJsonDocument *doc, const String &filename) {
         // open the file for reading:
         File file = FileSystem.fileSystem->open(filename, "r");
         if (file) {

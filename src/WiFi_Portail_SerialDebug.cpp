@@ -2,7 +2,7 @@
 // Created by antbd on 29/05/2021.
 //
 
-#include "TBD_WiFi_Portail_SerialDebug.h"
+#include "WiFi_Portail_SerialDebug.h"
 
 namespace WiFi_Portail_API {
     SerialDebugClass SerialDebug;

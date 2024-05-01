@@ -5,7 +5,7 @@
 #ifndef TBD_WIFI_PORTAIL_MDNS_H
 #define TBD_WIFI_PORTAIL_MDNS_H
 
-#include "TBD_WiFi_Portail.h"
+#include "WiFi_Portail.h"
 #ifdef USE_MDNS
 
 #include <ESP8266mDNS.h>

@@ -5,13 +5,13 @@
 #ifndef TBD_WIFI_PORTAIL_FILESMANAGER_H
 #define TBD_WIFI_PORTAIL_FILESMANAGER_H
 
-#include "TBD_WiFi_Portail.h"
+#include "WiFi_Portail.h"
 #ifdef USE_FTP
-#include "TBD_WiFi_Portail_FTP.h"
+#include "WiFi_Portail_FTP.h"
 #endif // USE_FTP
-#include "TBD_WiFi_Portail_Package.h"
+#include "WiFi_Portail_Package.h"
 #ifdef USE_OTA
-#include "TBD_WiFi_Portail_OTA.h"
+#include "WiFi_Portail_OTA.h"
 #endif // USE_OTA
 
 #include <ArduinoJson.h>
@@ -32,7 +32,8 @@ namespace WiFi_Portail_API {
             package,
             configAllWifi,
             configFTP,
-            configOTA
+            configOTA,
+            configNTP
         };
 
         FilesManagerClass();
@@ -44,6 +45,8 @@ namespace WiFi_Portail_API {
         void loadAllInformationsFromJsonFiles();
 
         void loadConfigFile(int indice);
+
+        String getFileName(int indice) const;
 
         void loadConfigProject(const String &filename, Package *package);
 
@@ -57,7 +60,15 @@ namespace WiFi_Portail_API {
         void loadConfigOTA(const String &filename);
 #endif // USE_OTA
 
+#ifdef USE_NTP
+        void loadConfigNTP(const String &filename);
+#endif // USE_NTP
+
         void saveConfigAllWifi();
+
+#ifdef USE_NTP
+        bool saveConfigNTP(DynamicJsonDocument *result);
+#endif // USE_NTP
 
         void printListOfConfigFiles();
 
@@ -70,9 +81,9 @@ namespace WiFi_Portail_API {
 
         void deleteFile(const String &path);
 
-        bool saveJSonToAFile(DynamicJsonDocument *doc, const String &filename);
+        bool saveJsonToFile(DynamicJsonDocument *doc, const String &filename);
 
-        JsonObject getJSonFromFile(DynamicJsonDocument *doc, const String &filename);
+        JsonObject getJsonFromFile(DynamicJsonDocument *doc, const String &filename);
     };
 
     extern FilesManagerClass FilesManager;

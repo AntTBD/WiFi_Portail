@@ -5,7 +5,7 @@
 #ifndef TBD_WIFI_PORTAIL_FILESYSTEM_H
 #define TBD_WIFI_PORTAIL_FILESYSTEM_H
 
-#include "TBD_WiFi_Portail.h"
+#include "WiFi_Portail.h"
 #include <vector>
 
 
@@ -109,8 +109,6 @@ namespace WiFi_Portail_API {
         void infos_FileSytem();
 
         void filesytem_end();
-
-        String formatBytes(size_t bytes) const;
 
         String getFilesListJson() const;
 

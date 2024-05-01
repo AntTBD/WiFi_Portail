@@ -5,7 +5,9 @@
 #ifndef TBD_WIFI_PORTAIL_ESP_H
 #define TBD_WIFI_PORTAIL_ESP_H
 
-#include "Service.h"
+#include <Arduino.h>
+#include "WiFi_Portail.h"
+#include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 
 #include <vector>
@@ -71,7 +73,7 @@ namespace WiFi_Portail_API {
 
 
 /// Class for all information from ESP
-    class ESPInfosClass : public Service {
+    class ESPInfosClass {
     public:
         ESPInfosClass();
 
@@ -84,11 +86,11 @@ namespace WiFi_Portail_API {
         String getHardwareInfosString2();
 
 
-        virtual DynamicJsonDocument toJson() override;
+        DynamicJsonDocument toJson();
 
-        virtual DynamicJsonDocument toObj() override;
+        DynamicJsonDocument toObj();
 
-        virtual String toString() override;
+        String toString();
 
     private:
 

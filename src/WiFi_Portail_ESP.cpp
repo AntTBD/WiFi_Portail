@@ -2,7 +2,7 @@
 // Created by antbd on 16/06/2021.
 //
 
-#include "TBD_WiFi_Portail_ESP.h"
+#include "WiFi_Portail_ESP.h"
 
 namespace WiFi_Portail_API {
 
@@ -36,7 +36,7 @@ namespace WiFi_Portail_API {
 };*/
 
 /// Constructor
-    ESPInfosClass::ESPInfosClass() : Service() {
+    ESPInfosClass::ESPInfosClass() {
 
         this->_deviceStatus = new std::vector<String>();
         this->_deviceStatus->insert(this->_deviceStatus->end(), {
@@ -55,6 +55,7 @@ namespace WiFi_Portail_API {
                 F("heapfrag"),
                 F("sketch"),
                 F("filesystem"),
+                F("totalsystemmemory"),
                 F("lastreset")
         });
 
@@ -91,7 +92,7 @@ namespace WiFi_Portail_API {
         DynamicJsonDocument docHardwareInfos(
                 JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(2)
                 + JSON_ARRAY_SIZE((this->_deviceStatus->size() + 1)) +
-                (this->_deviceStatus->size() + 1) * JSON_OBJECT_SIZE(4)
+                (this->_deviceStatus->size() + 1) * JSON_OBJECT_SIZE(5)
                 + JSON_ARRAY_SIZE((this->_networkStatus->size() + 1)) +
                 (this->_networkStatus->size() + 1) * JSON_OBJECT_SIZE(4)
         );
@@ -117,7 +118,7 @@ namespace WiFi_Portail_API {
         DynamicJsonDocument doc(
                 JSON_OBJECT_SIZE(2)
                 + JSON_ARRAY_SIZE((this->_deviceStatus->size() + 1)) +
-                (this->_deviceStatus->size() + 1) * (JSON_OBJECT_SIZE(4))
+                (this->_deviceStatus->size() + 1) * (JSON_OBJECT_SIZE(5))
                 + JSON_ARRAY_SIZE((this->_networkStatus->size() + 1)) +
                 (this->_networkStatus->size() + 1) * (JSON_OBJECT_SIZE(4))
         );
@@ -141,7 +142,7 @@ namespace WiFi_Portail_API {
 /// Convert all infos to JSON and then to string
     String ESPInfosClass::getHardwareInfosString2() {
         String jsonStringHardwareInfos;
-        jsonStringHardwareInfos.reserve(2000);
+        jsonStringHardwareInfos.reserve(2200);
         serializeJsonPretty(this->getHardwareInfosJson2(),
                             jsonStringHardwareInfos); // on remplie la string avec les infos de JSONInfo sous forme sérialisé
         Serial.println(jsonStringHardwareInfos);
@@ -155,7 +156,7 @@ namespace WiFi_Portail_API {
         if (id == F("uptime")) {
             info.name = F("Uptime");
 #ifdef USE_NTP
-            info.value = NTPManager.toString2();
+            info.value = NTPManager.getUptimeString();
 #else // USE_NTP
             unsigned long millisecs = millis();
             info.value = (String)((millisecs / (1000 * 60 * 60 * 24)) % 365);
@@ -176,10 +177,10 @@ namespace WiFi_Portail_API {
             info.value = (String) ESP.getFlashChipId();
         } else if (id == F("idesize")) {
             info.name = F("Flash IDE Size");
-            info.value = FileSystem.formatBytes(ESP.getFlashChipSize());
+            info.value = Utils.formatBytes(ESP.getFlashChipSize());
         } else if (id == F("realsize")) {
             info.name = F("Flash Real Size");
-            info.value = FileSystem.formatBytes(ESP.getFlashChipRealSize());
+            info.value = Utils.formatBytes(ESP.getFlashChipRealSize());
         } else if (id == F("flashspeed")) {
             info.name = F("Flash Speed");
             info.value = (String)(float(ESP.getFlashChipSpeed()) / 1000000);
@@ -208,8 +209,8 @@ namespace WiFi_Portail_API {
             info.value += F(" MHz");
         } else if (id == F("freeheap")) {
             info.name = F("Memory - Free Heap (RAM)");
-                info.value = FileSystem.formatBytes(ESP.getFreeHeap()) + F(" / ") +
-                        FileSystem.formatBytes(32768);// 32768 = IRAM from compiler
+                info.value = Utils.formatBytes(ESP.getFreeHeap()) + F(" / ") +
+                        Utils.formatBytes(32768);// 32768 = IRAM from compiler
             info.value += F(" <i>(Available / Total)</i>");
             info.progress.value = (float) (ESP.getFreeHeap());
             info.progress.min = 0;
@@ -225,9 +226,9 @@ namespace WiFi_Portail_API {
             info.progress.unity = F("%");
         } else if (id == F("sketch")) {
             info.name = F("Memory - Sketch Size");
-            info.value = FileSystem.formatBytes(ESP.getSketchSize());
+            info.value = Utils.formatBytes(ESP.getSketchSize());
             info.value += F(" / ");
-            info.value += FileSystem.formatBytes(ESP.getSketchSize() + ESP.getFreeSketchSpace());
+            info.value += Utils.formatBytes(ESP.getSketchSize() + ESP.getFreeSketchSpace());
             info.value += F(" <i>(Used / Total)</i>");
 #ifdef USE_OTA
             if (ESP.getSketchSize() > ESP.getFreeSketchSpace())
@@ -245,12 +246,28 @@ namespace WiFi_Portail_API {
             info.name = F("Memory - FileSystem Size");
             FSInfo fsInfo;
             FileSystem.fileSystem->info(fsInfo);
-            info.value += FileSystem.formatBytes(fsInfo.usedBytes);
+            info.value += Utils.formatBytes(fsInfo.usedBytes);
             info.value += F(" / ");
-            info.value += FileSystem.formatBytes(fsInfo.totalBytes);
+            info.value += Utils.formatBytes(fsInfo.totalBytes);
             info.value += F(" <i>(Used / Total)</i>");
             info.progress.value = (float) (fsInfo.usedBytes);
             info.progress.min = (float) (fsInfo.totalBytes);
+            info.progress.max = 0;
+            info.progress.unity = F("bytes");
+        }else if (id == F("totalsystemmemory")) {
+            //|--------------|-------|---------------|--|--|--|--|--|
+            //^              ^       ^               ^     ^
+            //Sketch    OTA update   File system   EEPROM  WiFi config (SDK)
+
+            info.name = F("Memory - Total Size");
+            FSInfo fsInfo;
+            FileSystem.fileSystem->info(fsInfo);
+            info.value += Utils.formatBytes(fsInfo.usedBytes +  ESP.getSketchSize() + (32768 - ESP.getFreeHeap()));
+            info.value += F(" / ");
+            info.value += Utils.formatBytes(fsInfo.totalBytes + ESP.getSketchSize() + ESP.getFreeSketchSpace() + 32768);
+            info.value += F(" <i>(Used / Total)</i>");
+            info.progress.value = (float) (fsInfo.usedBytes +  ESP.getSketchSize() + (32768 - ESP.getFreeHeap()));
+            info.progress.min = (float) (fsInfo.totalBytes + ESP.getSketchSize() + ESP.getFreeSketchSpace() + 32768);
             info.progress.max = 0;
             info.progress.unity = F("bytes");
         } else if (id == F("lastreset")) {
@@ -261,21 +278,21 @@ namespace WiFi_Portail_API {
             //---------------------------------------------
             //---------------------------------------------
         else if (id == F("wifimode")) {
-            info.name = F("Wifi Mode");
+            info.name = F("WiFi Mode");
             //WIFI_OFF = 0, WIFI_STA = 1, WIFI_AP = 2, WIFI_AP_STA = 3,
             int wifi_mode = WiFi.getMode();
             switch (wifi_mode) {
                 case 0: // WIFI_OFF
-                    info.value = F("WIFI_OFF");
+                    info.value = F("WiFi OFF");
                     break;
                 case 1: // WIFI_STA
-                    info.value = F("WIFI_STA");
+                    info.value = F("WiFi STA");
                     break;
                 case 2: // WIFI_AP
-                    info.value = F("WIFI_AP");
+                    info.value = F("WiFi AP");
                     break;
                 case 3: // WIFI_AP_STA
-                    info.value = F("WIFI_AP_STA");
+                    info.value = F("WiFi AP & STA");
                     break;
             }
         } else if (id == F("apip")) {

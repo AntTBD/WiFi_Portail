@@ -5,11 +5,12 @@
 #ifndef TBD_WIFI_PORTAIL_FTP_H
 #define TBD_WIFI_PORTAIL_FTP_H
 
-#include "TBD_WiFi_Portail.h"
+#include "WiFi_Portail.h"
 #ifdef USE_FTP
-#include "TBD_WiFi_Portail_Wifi.h"
+#include "WiFi_Portail_Wifi.h"
 
-#include <FTPServer.h> //https://github.com/dplasa/FTPClientServer
+#include <SimpleFTPServer.h> //https://github.com/xreef/SimpleFTPServer.git
+// todo: add callback functions
 
 namespace WiFi_Portail_API {
 
@@ -37,7 +38,7 @@ namespace WiFi_Portail_API {
     private:
 
         // ----------------------------------------- Init FTP Server -----------------------------------------------
-        FTPServer *_ftpSrv; // construct with LittleFS
+        FtpServer *_ftpSrv; // construct with LittleFS
 
         String _user;     // User name to log in FTP Server
         String _password; // Password to log in FTP Server

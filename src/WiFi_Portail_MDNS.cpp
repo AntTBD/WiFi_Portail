@@ -2,7 +2,7 @@
 // Created by antbd on 05/06/2021.
 //
 
-#include "TBD_WiFi_Portail_MDNS.h"
+#include "WiFi_Portail_MDNS.h"
 
 #ifdef USE_MDNS
 namespace WiFi_Portail_API {
@@ -39,11 +39,27 @@ namespace WiFi_Portail_API {
             this->setMdnsName(WifiManager.wifiAll->getMdnsName());
         }
         SerialDebug_println(F("MDNS responder started"));
+#ifdef USE_SECURE_SERVER
+        MDNS.addService("https", "tcp", 443); // add https service
+        SerialDebug_println(F("Port HTTPS open (443)"));
+#else
         MDNS.addService("http", "tcp", 80); // add http service
         SerialDebug_println(F("Port HTTP open (80)"));
+#endif
 
         MDNS.addService("ws", "tcp", 81); // add websocket service
         SerialDebug_println(F("Port WebSocket open (81)"));
+
+#ifdef USE_FTP
+        MDNS.addService("ftp", "tcp", 21); // add ftp service
+        SerialDebug_println(F("Port FTP open (21)"));
+#endif
+
+#ifdef USE_OTA
+        MDNS.addService("telnet", "tcp", 23); // add telnet service
+        SerialDebug_println(F("Port Telnet open (23) for OTA"));
+#endif
+
 
         SerialDebug_println(this->toString());
         SerialDebug_println(F("======================"));
