@@ -5,10 +5,10 @@
 #ifndef TBD_WIFI_PORTAIL_OTA_H
 #define TBD_WIFI_PORTAIL_OTA_H
 
-#include "TBD_WiFi_Portail.h"
+#include "WiFi_Portail.h"
 #ifdef USE_OTA
-#include "TBD_WiFi_Portail_WebEvents.h"
-#include "TBD_WiFi_Portail_MDNS.h"
+#include "WiFi_Portail_WebEvents.h"
+#include "WiFi_Portail_MDNS.h"
 
 #define OTA_DEBUG Serial
 #include <ArduinoOTA.h>

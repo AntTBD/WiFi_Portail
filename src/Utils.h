@@ -5,7 +5,8 @@
 #ifndef TBD_WIFI_PORTAIL_UTILS_H
 #define TBD_WIFI_PORTAIL_UTILS_H
 
-#include "TBD_WiFi_Portail.h"
+#include "WiFi_Portail.h"
+#include <IPAddress.h>
 
 namespace WiFi_Portail_API {
     class UtilsClass {
@@ -17,7 +18,8 @@ namespace WiFi_Portail_API {
         void loopWatchdog();
 
         void restartESP();
-
+        String IpToString(IPAddress adress) const;
+        String formatBytes(size_t bytes) const;
     };
 
     extern UtilsClass Utils;

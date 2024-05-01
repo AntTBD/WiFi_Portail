@@ -2,7 +2,7 @@
 // Created by antbd on 30/05/2021.
 //
 
-#include "TBD_WiFi_Portail_FileSystem.h"
+#include "WiFi_Portail_FileSystem.h"
 
 namespace WiFi_Portail_API {
     FileSystemClass FileSystem;
@@ -120,7 +120,7 @@ namespace WiFi_Portail_API {
                 SerialDebug_print(F(" ("));
                 //SerialDebug_printf("%ld",(uint32_t)dir.fileSize());
                 //SerialDebug_println(F(" Bytes)"));
-                SerialDebug_print(this->formatBytes(dir.fileSize()));
+                SerialDebug_print(Utils.formatBytes(dir.fileSize()));
                 SerialDebug_println(F(")"));
 
                 newDir->childrenFiles.push_back(newFile);
@@ -158,11 +158,11 @@ namespace WiFi_Portail_API {
         SerialDebug_print(F("info totalbytes :    "));
         //  SerialDebug_print(total);
         //  SerialDebug_println(F(" ko"));
-        SerialDebug_println(this->formatBytes(total));
+        SerialDebug_println(Utils.formatBytes(total));
         SerialDebug_print(F("info usedbytes :     "));
         //  SerialDebug_print((float)(fsInfo.usedBytes/1024.0));
         //  SerialDebug_println(F(" ko"));
-        SerialDebug_println(this->formatBytes(fsInfo.usedBytes));
+        SerialDebug_println(Utils.formatBytes(fsInfo.usedBytes));
         SerialDebug_print(F("info blocksize :     "));
         SerialDebug_println(fsInfo.blockSize);
         SerialDebug_print(F("info pagesize:       "));
@@ -195,16 +195,5 @@ namespace WiFi_Portail_API {
         this->fileSystem->end();
     }
 
-// ----------------------- format bytes ----------------------------------------------------
-    String FileSystemClass::formatBytes(size_t bytes) const {
-        if (bytes < 1024) {
-            return String(bytes) + F(" B");
-        } else if (bytes < (1024 * 1024)) {
-            return String(bytes / 1024.0) + F(" KB");
-        } else if (bytes < (1024 * 1024 * 1024)) {
-            return String(bytes / 1024.0 / 1024.0) + F(" MB");
-        } else {
-            return String(bytes / 1024.0 / 1024.0 / 1024.0) + F(" GB");
-        }
-    }
+
 }

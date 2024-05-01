@@ -2,12 +2,12 @@
 // Created by antbd on 05/06/2021.
 //
 
-#include "TBD_WiFi_Portail_WebServer.h"
+#include "WiFi_Portail_WebServer.h"
 
 namespace WiFi_Portail_API {
     WebServer::WebServer(int port) :
             _port(port) {
-        this->server = new AsyncWebServer(80);
+        this->server = new AsyncWebServer(this->_port);
         this->_loginConsole_username = "admin";
         this->_loginConsole_password = "admin";
 
@@ -31,6 +31,18 @@ namespace WiFi_Portail_API {
         // define root
         PathMethodOnRequest pathMethodOnRequest(uri, method, onRequest);
         this->_allRoots->push_back(pathMethodOnRequest);
+        this->server->on(pathMethodOnRequest.uri, pathMethodOnRequest.method, pathMethodOnRequest.onRequest);
+    }
+
+    void WebServer::addServerStatic(const char *uri, const char *path, const char *defaultFile, ArRequestFilterFunction filter) const {
+        this->addServerStatic(uri, path, defaultFile, "", "", filter);
+    }
+
+    void WebServer::addServerStatic(const char *uri, const char *path, const char *defaultFile, const char *username, const char *password, ArRequestFilterFunction filter) const {
+        AsyncStaticWebHandler* handler = &this->server->serveStatic(uri, *FileSystem.fileSystem, path);
+        handler->setDefaultFile(defaultFile);
+        if(filter != 0) handler->setFilter(filter);
+        if(username != "" && password != "") handler->setAuthentication(username, password);
     }
 
     void WebServer::addWebEvents(WebEvents &webEvents) {
@@ -40,6 +52,32 @@ namespace WiFi_Portail_API {
     void WebServer::addWebSocket(WebSocket &webSocket) {
         this->_webSocket = &webSocket;
     }
+
+#ifdef USE_SECURE_SERVER
+    int WebServer::sslFileRequest(void * arg, const char *filename, uint8_t **buf) {
+        SerialDebug_printf(F("Reading file: %s\n"), filename);
+        if(FileSystem.fileSystem->begin()) {
+            SerialDebug_println(F("SPIFFS has started"));
+        }
+        File file = FileSystem.fileSystem->open(filename, "r");
+        if(file){
+            SerialDebug_printf(F("File found: %s\n"), filename);
+            size_t size = file.size();
+            uint8_t * nbuf = (uint8_t*)malloc(size);
+            if(nbuf){
+                size = file.read(nbuf, size);
+                file.close();
+                *buf = nbuf;
+                return size;
+            }
+            file.close();
+        } else {
+            SerialDebug_println(F("File not found!"));
+            *buf = 0;
+            return 0;
+        }
+    }
+#endif
 
     void WebServer::begin() {
         SerialDebug_println(F("== Setup Web Server =="));
@@ -79,38 +117,30 @@ namespace WiFi_Portail_API {
                 "/debug",
                 HTTP_GET,
                 //std::bind(&WebServer::handleDebug, this,std::placeholders::_1)
-                [&](AsyncWebServerRequest *request) { this->handleDebug(request); });
+                [&](AsyncWebServerRequest *request) { this->handleDebug(request); }
+                );
+
+        //Serve different site files in AP or STA mode
+        this->addServerStatic("/", "/www/", "index.html", ON_STA_FILTER);
+        this->addServerStatic("/", "/ap/", "index.html", ON_AP_FILTER);
+        this->addServerStatic("/ws/", "/ws/", "ws.html"/*, "_user", "pass"*/);
+        this->addServerStatic("/admin/", "/admin/", "index.html"/*, "_user", "pass"*/);
 
         SerialDebug_print(F("root: (nbr="));
         SerialDebug_print(this->_allRoots->size() + 3);
         SerialDebug_println(F(")"));
 
         // add preconfigurated root with function
-        for (PathMethodOnRequest &pathMethodOnRequestTemp: *this->_allRoots) {
-            this->server->on(pathMethodOnRequestTemp.uri, pathMethodOnRequestTemp.method,
-                             pathMethodOnRequestTemp.onRequest);
+        for (PathMethodOnRequest &pathMethodOnRequestTemp : *this->_allRoots) {
             SerialDebug_print(F(" "));
             SerialDebug_println(pathMethodOnRequestTemp.uri);
         }
 
-        //Serve different site files in AP or STA mode
-        this->server
-                ->serveStatic("/", *FileSystem.fileSystem, "/www/")
-                .setDefaultFile("index.html")
-                .setFilter(ON_STA_FILTER);
         SerialDebug_println(F(" /     (in STA Mode)"));
-        this->server
-                ->serveStatic("/", *FileSystem.fileSystem, "/ap/")
-                .setDefaultFile("index.html")
-                .setFilter(ON_AP_FILTER);
         SerialDebug_println(F(" /     (in AP Mode)"));
-        //server->addHandler(new CaptiveRequestHandler()).setFilter(ON_AP_FILTER);                 //only when requested from AP
-
-        this->server
-                ->serveStatic("/ws/", *FileSystem.fileSystem, "/ws/")
-                .setDefaultFile("ws.html");
-        //.setAuthentication("_user", "pass");
         SerialDebug_println(F(" /ws/"));
+
+        //server->addHandler(new CaptiveRequestHandler()).setFilter(ON_AP_FILTER);                 //only when requested from AP
 
         this->server->onNotFound(
                 //std::bind(&WebServer::handleWebRequests, this,std::placeholders::_1)
@@ -122,23 +152,51 @@ namespace WiFi_Portail_API {
         DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
         SerialDebug_println(F("default header : Access-Control-Allow-Origin : *"));
 
+#ifdef USE_SECURE_SERVER
+
+        this->server->onSslFileRequest(this->sslFileRequest, NULL);
+        SerialDebug_println(F("Certs validation"));
+
+        this->server->beginSecure("/Cert.pem", "/Key.pem", NULL);
+        SerialDebug_println(F(" -> HTTPS server started."));
+
+#else
         // start the HTTP server
         this->server->begin(); // Web server start
-
         SerialDebug_println(F(" -> HTTP server started."));
+#endif
+        SerialDebug_print(F(" -> port: "));
+        SerialDebug_println(this->_port);
         SerialDebug_println(F("======================"));
     }
 
 // -------------------------------------------- Utils to return HTTP codes --------------------------------------------------------
 
     void WebServer::replyOK(AsyncWebServerRequest *request) {
-        request->send(200, F("text/plain"), F(""));
+        request->send(200, F(CONTENT_TYPE_PLAIN), F(""));
     }
 
 // --------------------------------------------
 
     void WebServer::replyOKWithMsg(const String &msg, AsyncWebServerRequest *request) {
-        request->send(200, F("text/plain"), msg);
+        request->send(200, F(CONTENT_TYPE_PLAIN), msg);
+    }
+
+    void WebServer::replyOKWithJson(const String &resultOfName, AsyncWebServerRequest *request, int code, JsonVariant json)//doc.to<JsonVariant>();
+    {
+        AsyncJsonResponse * response = new AsyncJsonResponse();// true if is array
+        response->addHeader("Server","ESP Async Web Server");
+        ArduinoJson6194_F1::VariantRef root = response->getRoot();
+        root[F("resultof")] = resultOfName.c_str();
+        root[F("value")] = json.as<JsonObject>();
+        response->setLength();
+        request->send(response);
+
+        /*AsyncResponseStream *response = request->beginResponseStream(F(CONTENT_TYPE_JSON));
+        response->addHeader(F(CORS_HEADER), "*");
+        response->setCode(code);
+        serializeJson(json, *response);
+        request->send(response);*/
     }
 
 // --------------------------------------------
@@ -149,25 +207,29 @@ namespace WiFi_Portail_API {
                 "<html><head><title>ESP8266 Web Server - Error 404</title><meta charset='UTF-8'><link rel='shortcut icon' href='#'></head><body style='background:#222;color:white;'><div style='text-align:center'><h1>Error 404:</h1><br><h3>Sorry, that page cannot be found!</h3><br></div><p>");
         messageHTML += msg;
         messageHTML += F("</p></body>");
-        request->send(404, F("text/html"), messageHTML);
+        request->send(404, F(CONTENT_TYPE_HTML), messageHTML);
     }
 
 // --------------------------------------------
 
     void WebServer::replyBadRequest(const String &msg, AsyncWebServerRequest *request) {
         SerialDebug_println(msg);
-        request->send(400, F("text/plain"), msg + F("\r\n"));
+        request->send(400, F(CONTENT_TYPE_PLAIN), msg + F("\r\n"));
     }
 
 // --------------------------------------------
 
     void WebServer::replyServerError(const String &msg, AsyncWebServerRequest *request) {
         SerialDebug_println(msg);
-        request->send(500, F("text/plain"), msg + F("\r\n"));
+        request->send(500, F(CONTENT_TYPE_PLAIN), msg + F("\r\n"));
     }
 
 // ----------------- Fonction permettant de gérer les pages "not found" (au cas ou le fichier n'existe pas)------------
     void WebServer::handleWebRequests(AsyncWebServerRequest *request) {
+        if (request->method() == HTTP_OPTIONS) {
+            request->send(200);
+            return;
+        }
         /*String uri = ESP8266WebServer::urlDecode(server.uri()); // required to read paths with blanks
         // called when the url is not defined here
         // use it to load content from SPIFFS
@@ -261,14 +323,14 @@ namespace WiFi_Portail_API {
 
     void WebServer::handleLoginConsole(AsyncWebServerRequest *request) {
         // HTTP basic authentication
-        String remoteIP = IpToString(request->client()->remoteIP());
-        if (!request->authenticate(_loginConsole_username, _loginConsole_password)) {
+        String remoteIP = Utils.IpToString(request->client()->remoteIP());
+        if (!request->authenticate(this->_loginConsole_username, this->_loginConsole_password)) {
             if (this->_webEvents != nullptr)
                 this->_webEvents->debug_to_WSEvents(F("New login attempt"), this->_webEvents->eventType->error);
             //        writeEvent("WARN", "websrv", "New login attempt", remoteIP);
             return request->requestAuthentication();
         }
-        request->send(200, F("text/plain"), F("Login Success! /ws/ws.js"));
+        request->send(200, F(CONTENT_TYPE_PLAIN), F("Login Success! /ws/ws.js"));
         if (this->_webEvents != nullptr)
             this->_webEvents->debug_to_WSEvents(F("Login success!"), this->_webEvents->eventType->success);
         //    writeEvent("INFO", "websrv", "Login success!", remoteIP);
@@ -281,7 +343,7 @@ namespace WiFi_Portail_API {
         //WiFi.scanNetworksAsync(std::bind(&WebServer::handleScanResult, this, std::placeholders::_1), true); // first param :  the event handler executed when the scan is done
         // second param : set it to true to scan for hidden networks
 
-        request->send(200, F("text/plain"), F("Response will be sended by WebSocket"));
+        request->send(200, F(CONTENT_TYPE_PLAIN), F("Response will be sended by WebSocket"));
         WiFi.scanNetworksAsync(
                 [&](int networksFound) {
                     if (this->_webSocket != nullptr)
@@ -328,28 +390,28 @@ namespace WiFi_Portail_API {
 
     void WebServer::handleGetRealTime(AsyncWebServerRequest *request) {
 #ifdef USE_NTP
-        request->send(200, F("text/plain"), F("Response will be sended by WebSocket"));
+        request->send(200, F(CONTENT_TYPE_PLAIN), F("Response will be sended by WebSocket"));
 
         if (this->_webSocket != nullptr)
-            this->_webSocket->sendJsonResultOf(F("getRealTime"), NTPManager.toObj());
+            this->_webSocket->sendJsonResultOf(F("getRealTime"), NTPManager.getRealTimeJsonObj());
 #else
-        request->send(200, F("text/plain"), F("NTP disabled !"));
+        request->send(200, F(CONTENT_TYPE_PLAIN), F("NTP disabled !"));
 #endif // USE_NTP
     }
 
     void WebServer::handleGetUptime(AsyncWebServerRequest *request) {
 #ifdef USE_NTP
-        request->send(200, F("text/plain"), F("Response will be sended by WebSocket"));
+        request->send(200, F(CONTENT_TYPE_PLAIN), F("Response will be sended by WebSocket"));
 
         if (this->_webSocket != nullptr)
-            this->_webSocket->sendStringResultOf(F("getUptime"), NTPManager.toString2());
+            this->_webSocket->sendStringResultOf(F("getUptime"), NTPManager.getUptimeString());
 #else
-        request->send(200, F("text/plain"), F("NTP disabled !"));
+        request->send(200, F(CONTENT_TYPE_PLAIN), F("NTP disabled !"));
 #endif // USE_NTP
     }
 
     void WebServer::handleGetESPInfos(AsyncWebServerRequest *request) {
-        request->send(200, F("text/plain"), F("Response will be sended by WebSocket"));
+        request->send(200, F(CONTENT_TYPE_PLAIN), F("Response will be sended by WebSocket"));
 
         if (this->_webSocket != nullptr)
             this->_webSocket->sendJsonResultOf(F("getStatus"), ESPInfos.toObj());
@@ -359,6 +421,6 @@ namespace WiFi_Portail_API {
         SerialDebug.setDebug(!SerialDebug.getDebug());
         String msg = F("Serial debug set to : ");
         msg += SerialDebug.getDebug() ? F("true") : F("false");
-        request->send(200, F("text/plain"), msg);
+        request->send(200, F(CONTENT_TYPE_PLAIN), msg);
     }
 }

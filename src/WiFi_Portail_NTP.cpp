@@ -2,7 +2,7 @@
 // Created by antbd on 07/06/2021.
 //
 
-#include "TBD_WiFi_Portail_NTP.h"
+#include "WiFi_Portail_NTP.h"
 
 #ifdef USE_NTP
 
@@ -13,12 +13,16 @@ namespace WiFi_Portail_API {
 
     NTPManagerClass::NTPManagerClass()
     {
-        this->_timeZone = 1;
-        this->_minutesTimeZone = 0;
-        this->_dayLight = true;
-        this->_timeout = 1500;
-        this->_interval = 63;
         this->_couldSendTime = false;
+
+        NTP.setNTPTimeout(1500);
+        NTP.setInterval(63);
+        NTP.setDayLight(true);
+        NTP.setTimeZone(1, 0);
+
+        NTP.onNTPSyncEvent(
+                [&](NTPSyncEvent_t event) { this->onNTPSyncEventFunction(event); }
+        );
     }
 
     NTPManagerClass::~NTPManagerClass() {
@@ -34,32 +38,33 @@ namespace WiFi_Portail_API {
     void NTPManagerClass::begin(const String &ntpServerName) {
 
         SerialDebug_println(F("========= Setup NTP ========="));
-        this->_ntpServerName = ntpServerName;
 
-        NTP.setInterval(this->_interval);
-        NTP.setNTPTimeout(this->_timeout);
-        NTP.onNTPSyncEvent(
-                [&](NTPSyncEvent_t event) { this->onNTPSyncEventFunction(event); }
-        );
-
-        if(NTP.begin(this->_ntpServerName, this->_timeZone, this->_dayLight,
-                             this->_minutesTimeZone )){
+        if(NTP.begin(ntpServerName, this->getTimeZoneHours(), this->getDayLight(), this->getTimeZoneMinutes() )){
             SerialDebug_println(F("NTP Client initialized"));
         }else{
             SerialDebug_println(F("NTP Client initialization failed"));
         }
 
-        //NTP.setDayLight(this->_dayLight);
-        //NTP.setNtpServerName(this->_ntpServerName);
-        //NTP.setTimeZone(this->_timeZone, this->_minutesTimeZone);
-
-        SerialDebug_printf(F("Interval: %d\n"), NTP.getInterval());
-        SerialDebug_printf(F("NTPTimeout: %d\n"), NTP.getNTPTimeout());
-        SerialDebug_printf(F("DayLight: %d\n"), NTP.getDayLight());
-        SerialDebug_printf(F("NtpServerName: %s\n"), NTP.getNtpServerName().c_str());
-        SerialDebug_printf(F("TimeZone: %d\n"), NTP.getTimeZone());
-        SerialDebug_printf(F("TimeZoneMinutes: %d\n"), NTP.getTimeZoneMinutes());
+        SerialDebug_println(this->toString());
         SerialDebug_println(F("============================="));
+    }
+
+    String NTPManagerClass::toString() const {
+        String str;
+        str += F("NTPManagerClass: ");
+        str += F("Interval(): ");
+        str += NTP.getInterval();
+        str += F("NTPTimeout(): ");
+        str += NTP.getNTPTimeout();
+        str += F("DayLight(): ");
+        str += NTP.getDayLight() ? F("true") : F("false");
+        str += F("NtpServerName(): ");
+        str += NTP.getNtpServerName().c_str();
+        str += F("TimeZone(): ");
+        str += NTP.getTimeZone();
+        str += F("TimeZoneMinutes(): ");
+        str += NTP.getTimeZoneMinutes();
+        return str;
     }
 
     void NTPManagerClass::loop() const {
@@ -71,8 +76,7 @@ namespace WiFi_Portail_API {
     }
 
     bool NTPManagerClass::setNtpServerName(const String &ntpServerName) {
-        this->_ntpServerName = ntpServerName;
-        return NTP.setNtpServerName(this->_ntpServerName);
+        return NTP.setNtpServerName(ntpServerName);
     }
 
     String NTPManagerClass::getNtpServerName() const {
@@ -80,18 +84,23 @@ namespace WiFi_Portail_API {
     }
 
     bool NTPManagerClass::setInterval(int interval) {
-        this->_interval = interval;
-        return NTP.setInterval(this->_interval);
+        return NTP.setInterval(interval);
     }
 
     int NTPManagerClass::getInterval() const {
         return NTP.getInterval();
     }
 
-    bool NTPManagerClass::setTimeZone(int8_t timeZone, int8_t minutes) {
-        this->_timeZone = timeZone;
-        this->_minutesTimeZone = minutes;
-        return NTP.setTimeZone(this->_timeZone, this->_minutesTimeZone);
+    bool NTPManagerClass::setTimeZone(int8_t hours, int8_t minutes) {
+        return NTP.setTimeZone(hours, minutes);
+    }
+
+    bool NTPManagerClass::setTimeZone(float timeZone) {
+        return this->setTimeZone((int)timeZone, timeZone - (int)timeZone);
+    }
+
+    int8_t NTPManagerClass::getTimeZone() const {
+        return this->getTimeZoneHours() + (this->getTimeZoneMinutes() / 60);
     }
 
     int8_t NTPManagerClass::getTimeZoneHours() const {
@@ -103,19 +112,22 @@ namespace WiFi_Portail_API {
     }
 
     void NTPManagerClass::setDayLight(bool dayLight) {
-        this->_dayLight = dayLight;
-        NTP.setDayLight(this->_dayLight);
+        NTP.setDayLight(dayLight);
     }
 
     bool NTPManagerClass::getDayLight() const {
         return NTP.getDayLight();
     }
 
+    bool NTPManagerClass::isSummerTime() const {
+        return NTP.isSummerTime();
+    }
+
     String NTPManagerClass::getTimeDateString() const {
         String timeDateString;
         timeDateString += NTP.getTimeDateString(NTP.getLastNTPSync());
         timeDateString += F(" ");
-        timeDateString += NTP.isSummerTime() ? F("Summer Time") : F("Winter Time");
+        timeDateString += this->isSummerTime() ? F("Summer Time") : F("Winter Time");
         return timeDateString;
     }
 
@@ -151,15 +163,13 @@ namespace WiFi_Portail_API {
                 SerialDebug_println(F("Error sending request"));
             else if (ntpEvent == responseError)
                 SerialDebug_println(F("NTP response error"));
-        } else {
-            if (ntpEvent == timeSyncd) {
+        } else if (ntpEvent == timeSyncd) {
                 SerialDebug_print(F("Got NTP time: "));
                 SerialDebug_println(NTP.getTimeDateString(NTP.getLastNTPSync()));
                 this->updateRealTimeValue();
 
                 //            this->sendRealTimeByWebSocket();
                 this->_couldSendTime = true;
-            }
         }
     }
 
@@ -173,8 +183,8 @@ namespace WiFi_Portail_API {
         this->_realTime.day = date.substring(0, 2).toInt();
         this->_realTime.month = date.substring(3, 5).toInt();
         this->_realTime.year = date.substring(6, 10).toInt();
-        this->_realTime.timezone = this->getTimeZoneHours() + (this->getTimeZoneMinutes() / 60);
-        this->_realTime.summerTime = NTP.isSummerTime();
+        this->_realTime.timezone = this->getTimeZone();
+        this->_realTime.summerTime = this->isSummerTime();
 
         SerialDebug_printf(F("Real Time : %s"), this->_realTime.toString().c_str());
     }
@@ -196,18 +206,19 @@ namespace WiFi_Portail_API {
 
         SerialDebug_println(NTP.getTimeDateString());
         this->updateRealTimeValue();
+        RealTime realTime = this->getRealTime();
 
         DynamicJsonDocument doc(JSON_OBJECT_SIZE(2) + 2 * JSON_OBJECT_SIZE(8));
         doc[F("resultof")] = F("getRealTime");
-        JsonObject realTime = doc.createNestedObject(F("value"));
-        realTime[F("day")] = this->_realTime.day;
-        realTime[F("month")] = this->_realTime.month;
-        realTime[F("year")] = this->_realTime.year;
-        realTime[F("hour")] = this->_realTime.hour;
-        realTime[F("min")] = this->_realTime.min;
-        realTime[F("sec")] = this->_realTime.sec;
-        realTime[F("timezone")] = this->_realTime.timezone;
-        realTime[F("summerTime")] = this->_realTime.summerTime ? 1 : 0;
+        JsonObject realTimeJson = doc.createNestedObject(F("value"));
+        realTimeJson[F("day")] = realTime.day;
+        realTimeJson[F("month")] = realTime.month;
+        realTimeJson[F("year")] = realTime.year;
+        realTimeJson[F("hour")] = realTime.hour;
+        realTimeJson[F("min")] = realTime.min;
+        realTimeJson[F("sec")] = realTime.sec;
+        realTimeJson[F("timezone")] = realTime.timezone;
+        realTimeJson[F("summerTime")] = realTime.summerTime ? 1 : 0;
 
         return doc;
     }
@@ -217,15 +228,17 @@ namespace WiFi_Portail_API {
         SerialDebug_println(NTP.getTimeDateString());
         this->updateRealTimeValue();
 
+        RealTime realTime = this->getRealTime();
+
         DynamicJsonDocument doc(2 * JSON_OBJECT_SIZE(8));
-        doc[F("day")] = this->getRealTime().day;
-        doc[F("month")] = this->getRealTime().month;
-        doc[F("year")] = this->getRealTime().year;
-        doc[F("hour")] = this->getRealTime().hour;
-        doc[F("min")] = this->getRealTime().min;
-        doc[F("sec")] = this->getRealTime().sec;
-        doc[F("timezone")] = this->getRealTime().timezone;
-        doc[F("summerTime")] = this->getRealTime().summerTime ? 1 : 0;
+        doc[F("day")] = realTime.day;
+        doc[F("month")] = realTime.month;
+        doc[F("year")] = realTime.year;
+        doc[F("hour")] = realTime.hour;
+        doc[F("min")] = realTime.min;
+        doc[F("sec")] = realTime.sec;
+        doc[F("timezone")] = realTime.timezone;
+        doc[F("summerTime")] = realTime.summerTime ? 1 : 0;
 
         //serializeJsonPretty(doc, Serial);
 
@@ -249,6 +262,42 @@ namespace WiFi_Portail_API {
         doc[F("value")] = this->getUptimeString();
 
         return doc;
+    }
+
+    bool NTPManagerClass::saveConfigInFile() {
+
+        DynamicJsonDocument doc(2 * JSON_OBJECT_SIZE(4));
+        doc[F("ntpServer")] = this->getNtpServerName();
+        doc[F("timeZone")] = this->getTimeZone();
+        doc[F("interval")] = this->getInterval();
+        doc[F("isSummerTime")] = this->getDayLight();
+
+        return FilesManager.saveConfigNTP(&doc);
+    }
+
+    void NTPManagerClass::setSettingsFromJson(const String &settingsJson) {
+        DynamicJsonDocument doc(JSON_OBJECT_SIZE(1) + settingsJson.length());
+        DeserializationError error = deserializeJson(doc, settingsJson);
+
+        if (error) {
+            SerialDebug_println(F("deserializeJson() failed: "));
+            SerialDebug_println(error.c_str());
+            return;
+        }
+        JsonObject json = doc.as<JsonObject>();
+        if (json.containsKey(F("ntpServer"))) {
+            this->setNtpServerName(json[F("ntpServer")].as<String>());
+        }
+        if (json.containsKey(F("timeZone"))) {
+            this->setTimeZone(json[F("timeZone")].as<float>());
+        }
+        if (json.containsKey(F("interval"))) {
+            this->setInterval(json[F("interval")].as<float>());
+        }
+        if (json.containsKey(F("isSummerTime"))) {
+            this->setDayLight(json[F("isSummerTime")].as<bool>());
+        }
+        this->saveConfigInFile();
     }
 }
 #endif // USE_NTP

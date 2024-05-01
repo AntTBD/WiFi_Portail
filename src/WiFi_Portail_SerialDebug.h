@@ -5,7 +5,7 @@
 #ifndef TBD_WIFI_PORTAIL_SERIALDEBUG_H
 #define TBD_WIFI_PORTAIL_SERIALDEBUG_H
 
-#include "TBD_WiFi_Portail.h"
+#include "WiFi_Portail.h"
 
 // Using serial.print to debug a library https://forum.arduino.cc/t/using-serial-print-to-debug-a-library/141845/24
 //#include <HardwareSerial.h>
