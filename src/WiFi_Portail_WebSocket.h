@@ -5,10 +5,9 @@
 #ifndef TBD_WIFI_PORTAIL_WEBSOCKET_H
 #define TBD_WIFI_PORTAIL_WEBSOCKET_H
 
-#include "TBD_WiFi_Portail.h"
-#include "Services/Service.h"
-#include "TBD_WiFi_Portail_WebServer.h"
-#include "TBD_WiFi_Portail_WebEvents.h"
+#include "WiFi_Portail.h"
+#include "WiFi_Portail_WebServer.h"
+#include "WiFi_Portail_WebEvents.h"
 
 #include <ESPAsyncTCP.h>       // https://github.com/me-no-dev/ESPAsyncTCP
 #include <ESPAsyncWebServer.h> // https://github.com/me-no-dev/ESPAsyncWebServer
@@ -85,6 +84,7 @@ namespace WiFi_Portail_API {
         void handleCommandStatus(AsyncWebSocketClient *client = nullptr, String value = "");
 
         void handleCommandRealTime(AsyncWebSocketClient *client = nullptr, String value = "");
+        void handleCommandSetNtp(AsyncWebSocketClient *client = nullptr, String value = "");
 
         void handleCommandNetwork(AsyncWebSocketClient *client = nullptr, String value = "");
 

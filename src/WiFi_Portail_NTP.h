@@ -5,9 +5,10 @@
 #ifndef TBD_WIFI_PORTAIL_NTP_H
 #define TBD_WIFI_PORTAIL_NTP_H
 
-#include "Service.h"
+#include "WiFi_Portail.h"
 
 #ifdef USE_NTP
+#include <ArduinoJson.h>
 
 // from https://github.com/gmag11/NtpClient/blob/master/examples/NTPClientBasic/NTPClientBasic.ino
 #include <ESPAsyncUDP.h>
@@ -60,7 +61,7 @@ namespace WiFi_Portail_API {
         }
     };
 
-    class NTPManagerClass : public Service {
+    class NTPManagerClass {
     public:
         NTPManagerClass();
 
@@ -70,6 +71,8 @@ namespace WiFi_Portail_API {
 
         void loop() const;
 
+        String toString() const;
+
         bool setNtpServerName(const String &ntpServerName);
 
         String getNtpServerName() const;
@@ -78,7 +81,11 @@ namespace WiFi_Portail_API {
 
         int getInterval() const;
 
-        bool setTimeZone(int8_t timeZone, int8_t minutes = 0);
+        bool setTimeZone(int8_t hours, int8_t minutes = 0);
+
+        bool setTimeZone(float timezone);
+
+        int8_t getTimeZone() const;
 
         int8_t getTimeZoneHours() const;
 
@@ -87,6 +94,8 @@ namespace WiFi_Portail_API {
         void setDayLight(bool dayLight);
 
         bool getDayLight() const;
+
+        bool isSummerTime() const;
 
         String getTimeDateString() const;
 
@@ -114,15 +123,8 @@ namespace WiFi_Portail_API {
 
         DynamicJsonDocument getUptimeJson();
 
-        DynamicJsonDocument toJson() override { return this->getRealTimeJson(); };
-
-        DynamicJsonDocument toJson2() override { return this->getUptimeJson(); };
-
-        DynamicJsonDocument toObj() override { return this->getRealTimeJsonObj(); };
-
-        String toString() override { return this->getRealTimeString(); };
-
-        String toString2() override { return this->getUptimeString(); };
+        void setSettingsFromJson(const String &settingsJson);
+        bool saveConfigInFile();
 
     private:
 
@@ -131,13 +133,6 @@ namespace WiFi_Portail_API {
         NTPSyncEvent_t _ntpEvent; // Last triggered event
 
         RealTime _realTime;
-
-        String _ntpServerName;
-        int _timeZone; // 0=UTC+0h
-        int _minutesTimeZone;
-        bool _dayLight;
-        int _timeout;
-        int _interval;
     };
 
     extern NTPManagerClass NTPManager;

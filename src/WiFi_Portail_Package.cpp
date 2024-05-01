@@ -2,7 +2,7 @@
 // Created by antbd on 05/06/2021.
 //
 
-#include "TBD_WiFi_Portail_Package.h"
+#include "WiFi_Portail_Package.h"
 
 namespace WiFi_Portail_API {
     Package::Package() : nameProject(F("")), versionProject(F("")), description(F("")), author(F("")), lastModification(F("")), license(F("")) {}

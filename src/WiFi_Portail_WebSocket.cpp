@@ -2,7 +2,7 @@
 // Created by antbd on 05/06/2021.
 //
 
-#include "TBD_WiFi_Portail_WebSocket.h"
+#include "WiFi_Portail_WebSocket.h"
 
 namespace WiFi_Portail_API {
     WebSocket::WebSocket(WebServer &webServer, const String &root) :
@@ -62,6 +62,11 @@ namespace WiFi_Portail_API {
                     [&](AsyncWebSocketClient *client, String value) { this->handleCommandScan(client, value); });
             this->addCommand(
                     "realTime",
+                    "getRealTime",
+                    //std::bind(&WebSocket::handleCommandRealTime, this,std::placeholders::_2)
+                    [&](AsyncWebSocketClient *client, String value) { this->handleCommandRealTime(client, value); });
+            this->addCommand(
+                    "setntp",
                     "getRealTime",
                     //std::bind(&WebSocket::handleCommandRealTime, this,std::placeholders::_2)
                     [&](AsyncWebSocketClient *client, String value) { this->handleCommandRealTime(client, value); });
@@ -355,7 +360,19 @@ namespace WiFi_Portail_API {
     void WebSocket::handleCommandRealTime(AsyncWebSocketClient *client, String value) {
         SerialDebug.println(F("get realTime"));
 #ifdef USE_NTP
-        this->sendJsonResultOf(F("getRealTime"), NTPManager.toObj()/*, client*/);// send to all client
+        this->sendJsonResultOf(F("getRealTime"), NTPManager.getRealTimeJsonObj()/*, client*/);// send to all client
+#else
+        this->send(F("NTP not added to WebSocket !"), client);
+#endif // USE_NTP
+    }
+
+    void WebSocket::handleCommandSetNtp(AsyncWebSocketClient *client, String value) {
+        SerialDebug.println(F("set ntp"));
+#ifdef USE_NTP
+
+
+
+        this->sendJsonResultOf(F("getRealTime"), NTPManager.getRealTimeJsonObj());// send to all client
 #else
         this->send(F("NTP not added to WebSocket !"), client);
 #endif // USE_NTP

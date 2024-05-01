@@ -33,6 +33,22 @@ namespace WiFi_Portail_API {
 
     }
 
-    /// ----------------------------------------------------------------
+    /// ----------------------------- Wifi ---------------------------
+    String UtilsClass::IpToString(IPAddress adress) const {
+        return (String) adress[0] + "." + (String) adress[1] + "." + (String) adress[2] + "." + (String) adress[3];
+    }
 
+
+    // ----------------------- format bytes ----------------------------------------------------
+    String UtilsClass::formatBytes(size_t bytes) const {
+        if (bytes < 1024) {
+            return String(bytes) + F(" B");
+        } else if (bytes < (1024 * 1024)) {
+            return String(bytes / 1024.0) + F(" KB");
+        } else if (bytes < (1024 * 1024 * 1024)) {
+            return String(bytes / 1024.0 / 1024.0) + F(" MB");
+        } else {
+            return String(bytes / 1024.0 / 1024.0 / 1024.0) + F(" GB");
+        }
+    }
 }

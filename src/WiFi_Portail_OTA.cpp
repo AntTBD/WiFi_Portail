@@ -2,7 +2,7 @@
 // Created by antbd on 06/09/2021.
 //
 
-#include "TBD_WiFi_Portail_OTA.h"
+#include "WiFi_Portail_OTA.h"
 
 #ifdef USE_OTA
 
@@ -189,7 +189,9 @@ namespace WiFi_Portail_API {
         //TBD
         String msg = F("* OTA: Update Start (type=");
         msg += type;
-        msg += F(")");
+        msg += F(") ");
+        msg += Update.size();
+        msg += F(" bytes");
         if (this->_webEvents != nullptr)
             this->_webEvents->debug_to_WSEvents(msg, F("ota"));
         //fin TBD
@@ -197,14 +199,8 @@ namespace WiFi_Portail_API {
 
     void OTAManagerClass::arduinoOTAOnEnd() {
         digitalWrite(this->led_pin, HIGH); // éteint à la fin de la mise à jour
-        //Serial.println(F("\n* OTA: End"));
-        //events.send("* OTA: Update End", F("ota"));//TBD
-        char p[50];
-        sprintf(p, "* OTA: free space: %u / total: %u\n", ESP.getFreeSketchSpace(),
-                (ESP.getSketchSize() + ESP.getFreeSketchSpace()));
-        //events.send(p, F("ota"));
+
         if (this->_webEvents != nullptr) {
-            this->_webEvents->debug_to_WSEvents(p, F("ota"));
             this->_webEvents->debug_to_WSEvents(F("* OTA: Update End"), F("ota"));
         }
         this->rebootESP8266();
@@ -218,10 +214,9 @@ namespace WiFi_Portail_API {
         // envoi des infos toutes les x millis secondes
         if (millis() - this->previousMillisSendInfos >= this->intervalSendInfos) {
             this->previousMillisSendInfos = millis();
+
             char p[80];
-            sprintf(p, "* OTA: Progress: %u%% | free space: %u / total: %u\n", (progress / (total / 100)),
-                    ESP.getFreeSketchSpace(), (ESP.getSketchSize() + ESP.getFreeSketchSpace()));
-            //events.send(p, "ota");
+            sprintf(p, "* OTA: Progress: %u%% (%u / %u bytes)\n", (progress / (total / 100)), Update.progress(), Update.size());
             if (this->_webEvents != nullptr)
                 this->_webEvents->debug_to_WSEvents(p, F("ota"));
         }
@@ -233,28 +228,15 @@ namespace WiFi_Portail_API {
             //this->_webEvents->debug_to_WSEvents((String)F("* OTA: Error[")+error+(String)F("]"), F("ota"));
             if (error == OTA_AUTH_ERROR) {
                 this->_webEvents->debug_to_WSEvents(F("Auth Failed"), F("ota"));
-                //Serial.println("Auth Failed");
-                // events.send("Auth Failed", "ota");
             } else if (error == OTA_BEGIN_ERROR) {
                 this->_webEvents->debug_to_WSEvents(F("Begin Failed"), F("ota"));
-                //Serial.println("Begin Failed");
-                // events.send("Begin Failed", "ota");
             } else if (error == OTA_CONNECT_ERROR) {
                 this->_webEvents->debug_to_WSEvents(F("Connect Failed"), F("ota"));
-                //Serial.println("Connect Failed");
-                // events.send("Connect Failed", "ota");
             } else if (error == OTA_RECEIVE_ERROR) {
                 this->_webEvents->debug_to_WSEvents(F("Receive Failed"), F("ota"));
-                //Serial.println("Receive Failed");
-                // events.send("Recieve Failed", "ota");
             } else if (error == OTA_END_ERROR) {
                 this->_webEvents->debug_to_WSEvents(F("End Failed"), F("ota"));
-                //Serial.println("End Failed");
-                // events.send("End Failed", "ota");
             }
-
-            //Serial.println(F("* OTA: ESP Restart"));
-            //events.send("Ota Error => ESP Restart", F("ota"));//TBD
             this->_webEvents->debug_to_WSEvents(F("* OTA: ESP Restart"), F("ota"));
         }
         this->rebootESP8266();
